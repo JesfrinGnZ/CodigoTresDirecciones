@@ -3,19 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package proyecto1compi2;
+package gnz.backend.manejoDeDatos;
 
 /**
  *
  * @author jesfrin
  */
-public class Proyecto1Compi2 {
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        // TODO code application logic here
-    }
+public interface Dato {
     
 }

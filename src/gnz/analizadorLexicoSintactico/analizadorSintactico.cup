@@ -1,0 +1,369 @@
+/*--------------- 1ra Area: Codigo de Usuario -----------------------*/
+//-------> importaciones, paquetes
+
+package gnz.backend.analizadores;
+
+import gnz.backend.cuarteto.ManejadorDeCuartetos;
+import gnz.frontend.editorDeTexto.EditorDeTextoFrame;
+import java_cup.runtime.*;
+import gnz.backend.errores.ManejadorDeErrores;
+import gnz.backend.manejoDeDatos.*;
+import gnz.backend.tablaDeSimbolos.*;
+
+parser code {:
+    
+    private EditorDeTextoFrame editor;
+    private ManejadorDeTipos manejadorDeTipos;
+    private ManejadorDeCuartetos manCuarteto;
+    private TablaDeSimbolos tablaDeSimbolos;
+
+    public parser(AnalizadorLexicoCodigo lex,EditorDeTextoFrame editor,ManejadorDeCuartetos manCuarteto){
+        super(lex);
+        this.editor=editor;
+        this.manCuarteto = manCuarteto;
+        this.manejadorDeTipos = new ManejadorDeTipos(manCuarteto,editor);
+        this.tablaDeSimbolos = new TablaDeSimbolos(this.editor, this.manCuarteto);
+    }
+    
+    //Metodo al que se llama automaticamente ante algun error sintactico
+    public void syntax_error(Symbol s){        
+        int columna = s.right;
+        int linea = s.left;
+        //System.out.println("Error SINTACTICO:" + s.value + " en:" + linea + ":" + columna);
+        String estructura=(String)s.value;
+        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,true);
+
+}
+
+    //Metodo al que se llama en el momento en que ya no es posible una recuperacion de errores
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{        
+        int columna = s.right;
+        int linea = s.left;
+        //System.out.println("Error SINTACTICO:" + s.value + " en:" + linea + ":" + columna);
+        String estructura=(String)s.value;
+        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,false);
+ }
+
+    private DatoCodigo accionesParaExpresiones(DatoCodigo i,DatoCodigo e,Operacion operacion){
+        Dato tipoMaximo=manejadorDeTipos.buscarDatoMayor(i, e);
+        System.out.println("Tipo maximo es:"+tipoMaximo);
+        manejadorDeTipos.asignarTipoDeDato(i,tipoMaximo);
+        manejadorDeTipos.asignarTipoDeDato(e,tipoMaximo);
+        return manejadorDeTipos.operarDatos(i,e,operacion);
+    }
+    
+    
+
+
+:}
+
+/*--------------- 2da Area: Declaraciones -----------------------*/
+
+terminal String     PCOMA;
+terminal String     ASIGNACION,COMA;
+terminal String     IDENTIFICADOR;
+terminal String     BOOLEAN;
+terminal String     TRUE,FALSE;
+terminal String     CHAR;
+terminal String     DECLARACION_CARACTER;
+terminal String     BYTE,INT,LONG,FLOAT,DOUBLE;
+terminal String     NUMERO_ENTERO,NUMERO_DECIMAL,NUMERO_DECIMALF;
+terminal String     STRING;
+terminal String     DECLARACION_STRING;
+
+terminal String     MAS,POR,MENOS,DIV,PORCENTAJE;
+terminal String     MENOR,MAYOR,MENOR_IGUAL,MAYOR_IGUAL,DISTINTO_DE,IGUAL_A;
+terminal String     NOT,AND,OR;
+
+terminal String     PARENTESIS_ABIERTO,PARENTESIS_CERRADO,CORCHETE_ABIERTO,CORCHETE_CERRADO;
+
+terminal String     IF,ELSIF,ELSE;
+
+terminal String     WHILE,DO;
+
+terminal String     FOR,DOS_PUNTOS;
+
+terminal String     ARRAY;
+
+terminal String     PRINT,PRINTLN;
+
+//terminal String     COMENTARIO_LINEA,COMENTARIO_DE_BLOQUE;
+
+
+non terminal Object     inicio;
+non terminal Object     conjuntoDeInstrucciones,unaInstruccion;
+
+//******************************************************************Declaracion de variables******************************************
+
+non terminal Object     declaracionDeVariables;
+non terminal String     tipoDeVariable;
+non terminal Object     conjuntoDeIdentificadoresParaVariables,unIdentificadorParaVariable;
+non terminal DatoCodigo       expresion,t,f;
+
+//******************************************************************Condicion y comparacion******************************************
+
+non terminal DatoCodigo     comparacion;
+non terminal Object condicion,j,q;
+
+
+//******************************************************************Asignacion de variables******************************************
+
+non terminal Object     asignacionDeVariable;
+
+//******************************************************************Declaracion de arreglos******************************************
+
+non terminal Object     declaracionDeArreglos;
+non terminal Object     conjuntoDeIdentificadoresParaArreglo,unIdentificadorParaArreglo;
+
+//******************************************************************Declaracion de estructura If******************************************
+
+non terminal Object     declaracionDeEstructuraIf;
+
+//******************************************************************Declaracion de estructura IF-ELSE******************************************
+
+non terminal Object     declaracionDeEstructuraIfElse;
+
+//******************************************************************Declaracion de estructura ELSEIF******************************************
+
+non terminal Object     declaracionDeEstructuraElseIf,conjuntoDeElseIf,unElseIf;
+
+
+//******************************************************************Declaracion de estructura While******************************************
+
+non terminal Object     declaracionDeEstructuraWhile;
+
+//******************************************************************declaracion de estructura DoWhile********************************************
+
+non terminal Object     declaracionDeEstructuraDoWhile;
+
+
+//******************************************************************declaracion de estructura For********************************************
+
+non terminal Object     declaracionDeEstructuraFor,incrementoDecremento;
+
+
+//******************************************************************declaracion de funciones Predefinidas********************************************
+
+non terminal Object     declaracionDeFuncionesPredefinidas,conjuntoDeTexto,unTexto;
+
+
+
+/*--------------- 3ra Area: Reglas Semanticas -----------------------*/
+
+
+precedence left OR;
+precedence left AND;
+start with inicio;
+
+//******************************************************************Inicio**********************************************************
+
+
+inicio::= conjuntoDeInstrucciones;
+
+conjuntoDeInstrucciones::=conjuntoDeInstrucciones unaInstruccion|unaInstruccion;
+
+tipoDeVariable::=BOOLEAN:i|CHAR:i|BYTE:i|INT:i|LONG:i|FLOAT:i|DOUBLE:i|STRING:i
+                {:RESULT=i;:};
+
+unaInstruccion::=error;
+
+//******************************************************************Expresion**********************************************************
+
+expresion::=expresion:i MAS t:e
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.MAS);:};
+
+expresion::=expresion:i MENOS t:e
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.MENOS);:};
+
+//expresion::=expresion:i AND t:e;
+
+expresion::=expresion:i PORCENTAJE t:e
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
+
+expresion::=t:i{:RESULT=i;:};
+
+t::=t:i POR f:e
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
+
+t::=t:i DIV f:e
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
+
+t::=f:i{:RESULT=i;:};
+
+f::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
+    {:ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
+    if(elemento==null){
+    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft);
+    manCuarteto.setExistioErrorSemantico(true);
+    RESULT=null;}//Error semantico, la variable no ha sido declarada
+    else{DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),i);
+    RESULT=dato;
+    }   
+    :};
+
+f::=NUMERO_ENTERO:i //Averiguar con los rangos
+    {:DatoNumerico datoNum=manejadorDeTipos.verificarDato(i);
+      DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,datoNum,i);//verificar segun rangos
+      RESULT= dato;:};
+
+f::=NUMERO_DECIMAL:i
+    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.DOUBLE,i);
+      RESULT=dato;
+    :};
+
+f::=NUMERO_DECIMALF:i
+    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.FLOAT,i);
+     RESULT=dato;
+    :};
+
+f::=DECLARACION_CARACTER:i
+    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,null,i.substring(1,2));
+     RESULT=dato;
+    :};
+
+f::=DECLARACION_STRING:i
+    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.CADENA,null,i.substring(1,i.length()-1));
+     RESULT=dato;
+    :};
+
+f::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
+    {:RESULT= i;:};
+
+//******************************************************************COndicion y Comparacion**********************************************************
+
+condicion::= condicion AND j;
+
+condicion::= condicion OR j;
+
+condicion::=j;
+
+j::=j NOT q;
+
+j::=q;
+
+q::=comparacion;
+
+q::=TRUE;
+
+q::=FALSE;
+
+//q::=IDENTIFICADOR; 
+
+comparacion::=expresion MENOR expresion;
+
+comparacion::=expresion MAYOR expresion;
+
+comparacion::=expresion MENOR_IGUAL expresion;
+
+comparacion::=expresion MAYOR_IGUAL expresion;
+
+comparacion::=expresion DISTINTO_DE expresion;
+
+comparacion::=expresion IGUAL_A expresion;
+
+//************************************************************************INSTRUCCIONES*****************************************************
+//******************************************************************Declaracion de variables******************************************
+
+unaInstruccion::=declaracionDeVariables;
+
+declaracionDeVariables::= tipoDeVariable conjuntoDeIdentificadoresParaVariables PCOMA;
+
+conjuntoDeIdentificadoresParaVariables::=conjuntoDeIdentificadoresParaVariables COMA unIdentificadorParaVariable | unIdentificadorParaVariable;
+
+unIdentificadorParaVariable::=IDENTIFICADOR;
+
+unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION expresion;
+
+unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion;
+
+//******************************************************************Asignacion de variables******************************************
+
+conjuntoDeInstrucciones::=asignacionDeVariable;
+
+asignacionDeVariable::=IDENTIFICADOR ASIGNACION expresion;
+
+asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion;
+
+
+//******************************************************************Declaracion de arreglos******************************************
+
+unaInstruccion::=declaracionDeArreglos;
+
+declaracionDeArreglos::= ARRAY tipoDeVariable CORCHETE_ABIERTO NUMERO_ENTERO CORCHETE_CERRADO conjuntoDeIdentificadoresParaArreglo PCOMA;
+
+conjuntoDeIdentificadoresParaArreglo::=conjuntoDeIdentificadoresParaArreglo COMA unIdentificadorParaArreglo|unIdentificadorParaArreglo;
+
+unIdentificadorParaArreglo::=IDENTIFICADOR;
+
+//******************************************************************Asignacion de arreglos******************************************
+
+
+
+//******************************************************************Declaracion de estructura IF******************************************
+
+unaInstruccion::=declaracionDeEstructuraIf;
+
+declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+//declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO unaInstruccion;
+
+//******************************************************************Declaracion de estructura IF-ELSE******************************************
+
+unaInstruccion::=declaracionDeEstructuraIfElse;
+
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+
+//******************************************************************Declaracion de estructura ELSEIF******************************************
+
+unaInstruccion::=declaracionDeEstructuraElseIf;
+
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf;
+
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+
+conjuntoDeElseIf::=conjuntoDeElseIf unElseIf | unElseIf;
+
+unElseIf::=ELSIF PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+
+
+//******************************************************************Declaracion de estructura WHILE******************************************
+
+unaInstruccion::=declaracionDeEstructuraWhile;
+
+declaracionDeEstructuraWhile::=WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+declaracionDeEstructuraWhile::=WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO unaInstruccion;
+
+//******************************************************************Declaracion de estructura DO WHILE******************************************
+
+unaInstruccion::=declaracionDeEstructuraDoWhile;
+
+declaracionDeEstructuraDoWhile::=DO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO;
+
+//******************************************************************Declaracion de estructura FOR******************************************
+
+unaInstruccion::=declaracionDeEstructuraFor;
+
+declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO unIdentificadorParaVariable DOS_PUNTOS comparacion DOS_PUNTOS incrementoDecremento PARENTESIS_CERRADO
+                                CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+
+declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO unIdentificadorParaVariable DOS_PUNTOS comparacion DOS_PUNTOS incrementoDecremento PARENTESIS_CERRADO unaInstruccion;
+
+incrementoDecremento::= MAS NUMERO_ENTERO;
+
+incrementoDecremento::= MENOS NUMERO_ENTERO;
+
+//******************************************************************Funciones predefinidas******************************************
+
+unaInstruccion::=declaracionDeFuncionesPredefinidas;//PRINT,PRINTLN
+
+declaracionDeFuncionesPredefinidas::=PRINT CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO;
+
+declaracionDeFuncionesPredefinidas::=PRINTLN CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO;
+
+conjuntoDeTexto::=conjuntoDeTexto COMA unTexto|unTexto;
+
+unTexto::=f;
