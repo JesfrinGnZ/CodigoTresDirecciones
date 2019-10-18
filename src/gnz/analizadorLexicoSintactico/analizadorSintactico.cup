@@ -200,7 +200,7 @@ expresion::=expresion:i MENOS t:e
 //expresion::=expresion:i PORCENTAJE t:e
 //    {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
-expresion::=t:i{:RESULT=i;:};
+//expresion::=t:i{:RESULT=i;:};
 
 t::=t:i POR f:e
     {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
@@ -258,7 +258,7 @@ condicion::= condicion AND j;
 condicion::= condicion OR j;
 
 condicion::=j;
-
+  
 j::=j NOT q;
 
 j::=q;
@@ -325,11 +325,11 @@ unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion
 
 //******************************************************************Asignacion de variables******************************************
 
-conjuntoDeInstrucciones::=asignacionDeVariable;
+unaInstruccion::=asignacionDeVariable;
 
-asignacionDeVariable::=IDENTIFICADOR ASIGNACION expresion;
+asignacionDeVariable::=IDENTIFICADOR ASIGNACION expresion PCOMA;
 
-asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion;
+asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion PCOMA;
 
 
 //******************************************************************Declaracion de arreglos******************************************
