@@ -157,6 +157,8 @@ non terminal Object     declaracionDeFuncionesPredefinidas,conjuntoDeTexto,unTex
 
 precedence left ELSE;
 precedence left ELSIF;
+precedence left MAS, MENOS;
+precedence left POR, DIV,PORCENTAJE;
 start with inicio;
 
 //******************************************************************Inicio**********************************************************
@@ -189,31 +191,14 @@ unaInstruccion::=error;
 
 //******************************************************************Expresion**********************************************************
 
-expresion::=expresion:i MAS t:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.MAS);:};
+expresion::=expresion:i MAS expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.MAS);:};
+expresion::=expresion:i MENOS expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.MENOS);:};
+expresion::=expresion:i POR expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
+expresion::=expresion:i DIV expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.DIV);:};
+expresion::=expresion:i PORCENTAJE expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
-expresion::=expresion:i MENOS t:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.MENOS);:};
 
-//expresion::=expresion:i AND t:e;
-
-//expresion::=expresion:i PORCENTAJE t:e
-//    {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
-
-//expresion::=t:i{:RESULT=i;:};
-
-t::=t:i POR f:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
-
-t::=t:i DIV f:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.DIV);:};
-
-t::=t:i PORCENTAJE f:e
-{:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
-
-t::=f:i{:RESULT=i;:};
-
-f::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
+expresion::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
     {:ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
     if(elemento==null){
     ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
@@ -223,32 +208,32 @@ f::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
     }   
     :};
 
-f::= NUMERO_ENTERO:i //Averiguar con los rangos
+expresion::= NUMERO_ENTERO:i //Averiguar con los rangos
     {:DatoNumerico datoNum=manejadorDeTipos.verificarDato(i);
       DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,datoNum,i);//verificar segun rangos
       RESULT= dato;:};
 
-f::=NUMERO_DECIMAL:i
+expresion::=NUMERO_DECIMAL:i
     {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.DOUBLE,i);
       RESULT=dato;
     :};
 
-f::=NUMERO_DECIMALF:i
+expresion::=NUMERO_DECIMALF:i
     {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.FLOAT,i);
      RESULT=dato;
     :};
 
-f::=DECLARACION_CARACTER:i
+expresion::=DECLARACION_CARACTER:i
     {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,null,i.substring(1,2));
      RESULT=dato;
     :};
 
-f::=DECLARACION_STRING:i
+expresion::=DECLARACION_STRING:i
     {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.CADENA,null,i.substring(1,i.length()-1));
      RESULT=dato;
     :};
 
-f::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
+expresion::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
     {:System.out.println("RECONOCIDO PARENTESIS");RESULT= i;:};
 
 //******************************************************************COndicion y Comparacion**********************************************************
@@ -315,9 +300,14 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe realizar la respectiva comprobacion de tipo,crear la variable, y guardarla en la tabla
 {:
-  int n=manCuarteto.getNumeroDeTemporal()-1;
-  DeclaracionDeVariable declaracion = new DeclaracionDeVariable(i,"t"+n,e);
-  RESULT=declaracion;
+                    DeclaracionDeVariable declaracion;
+                if(e.getTemporal()==null){//Solo viene un id|num, solo uno
+                    declaracion = new DeclaracionDeVariable(i, null, e);
+                }else{
+                    int n=manCuarteto.getNumeroDeTemporal()-1;
+                    declaracion = new DeclaracionDeVariable(i,"t"+n,e);
+                }
+                    RESULT=declaracion;
 :};
 
 unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion
