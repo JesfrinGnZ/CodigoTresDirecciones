@@ -23,7 +23,7 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
 
     private final UndoManager editManager;
     private final ManejadorDeEditorDeTexto manejadorEditor;
-    private final ManejadorDeCuartetos  manejadorDeCuartetos;
+    private final ManejadorDeCuartetos manejadorDeCuartetos;
 
     /**
      * Creates new form EditorDeTextoFrame
@@ -33,7 +33,7 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
         initComponents();
         crearOyenteDeEdicion();
         this.manejadorEditor = new ManejadorDeEditorDeTexto(codigoTextArea, editManager, this);
-        this.manejadorDeCuartetos=new ManejadorDeCuartetos();
+        this.manejadorDeCuartetos = new ManejadorDeCuartetos();
     }
 
     @SuppressWarnings("unchecked")
@@ -46,10 +46,11 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        jTextArea3 = new javax.swing.JTextArea();
+        codigo3dTextArea = new javax.swing.JTextArea();
         filaColumnaLabel = new javax.swing.JLabel();
         jToolBar1 = new javax.swing.JToolBar();
         analizarCodigoButton = new javax.swing.JButton();
+        limpiarCodigo3dYErroresButton = new javax.swing.JButton();
         limpiarAreaDeTextoButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
@@ -83,9 +84,9 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
 
         jLabel2.setText("Codigo tres direcciones");
 
-        jTextArea3.setColumns(20);
-        jTextArea3.setRows(5);
-        jScrollPane3.setViewportView(jTextArea3);
+        codigo3dTextArea.setColumns(20);
+        codigo3dTextArea.setRows(5);
+        jScrollPane3.setViewportView(codigo3dTextArea);
 
         filaColumnaLabel.setFont(new java.awt.Font("Manjari Bold", 0, 8)); // NOI18N
         filaColumnaLabel.setText("1:1");
@@ -101,10 +102,23 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
         });
         jToolBar1.add(analizarCodigoButton);
 
-        limpiarAreaDeTextoButton.setText("Limpiar");
+        limpiarCodigo3dYErroresButton.setText("Limpiar Codigo 3D");
+        limpiarCodigo3dYErroresButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                limpiarCodigo3dYErroresButtonActionPerformed(evt);
+            }
+        });
+        jToolBar1.add(limpiarCodigo3dYErroresButton);
+
+        limpiarAreaDeTextoButton.setText("Limpiar Todo");
         limpiarAreaDeTextoButton.setFocusable(false);
         limpiarAreaDeTextoButton.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
         limpiarAreaDeTextoButton.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        limpiarAreaDeTextoButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                limpiarAreaDeTextoButtonActionPerformed(evt);
+            }
+        });
         jToolBar1.add(limpiarAreaDeTextoButton);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -122,8 +136,8 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(filaColumnaLabel)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 432, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 118, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
+                .addComponent(jToolBar1, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(21, 21, 21))
@@ -143,7 +157,7 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
                             .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 395, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addGap(32, 32, 32)
-                                .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 114, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(filaColumnaLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -268,7 +282,7 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(27, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -350,12 +364,25 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
 
     private void analizarCodigoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_analizarCodigoButtonActionPerformed
         try {
-           analizarCodigo(this.codigoTextArea.getText());
+            this.codigo3dTextArea.setText("");
+            this.erroresTextArea.setText("");
+            analizarCodigo(this.codigoTextArea.getText());
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Existio un error al analizar el codigo :/");
             Logger.getLogger(EditorDeTextoFrame.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_analizarCodigoButtonActionPerformed
+
+    private void limpiarAreaDeTextoButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_limpiarAreaDeTextoButtonActionPerformed
+        this.codigoTextArea.setText("");
+        this.codigo3dTextArea.setText("");
+        this.erroresTextArea.setText("");
+    }//GEN-LAST:event_limpiarAreaDeTextoButtonActionPerformed
+
+    private void limpiarCodigo3dYErroresButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_limpiarCodigo3dYErroresButtonActionPerformed
+        this.codigo3dTextArea.setText("");
+        this.erroresTextArea.setText("");
+    }//GEN-LAST:event_limpiarCodigo3dYErroresButtonActionPerformed
     /**
      * @param args the command line arguments
      */
@@ -363,6 +390,7 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenuItem abrirArchivoMenuItem2;
     private javax.swing.JButton analizarCodigoButton;
+    private javax.swing.JTextArea codigo3dTextArea;
     private javax.swing.JTextArea codigoTextArea;
     private javax.swing.JMenuItem copiarMenuItem;
     private javax.swing.JMenuItem cortarMenuItem;
@@ -382,9 +410,9 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JTextArea jTextArea3;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JButton limpiarAreaDeTextoButton;
+    private javax.swing.JButton limpiarCodigo3dYErroresButton;
     private javax.swing.JMenuItem nuevoArchivoMenuItem;
     private javax.swing.JMenuItem pegarMenuItem;
     private javax.swing.JMenuItem rehacerMenuItem;
@@ -400,14 +428,19 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
     }
 
     public void analizarCodigo(String codigo) throws Exception {
-        AnalizadorLexicoCodigo lex = new AnalizadorLexicoCodigo(new BufferedReader(new StringReader(codigo)),this);
-        parser sintactico = new parser(lex, this,manejadorDeCuartetos);
+        AnalizadorLexicoCodigo lex = new AnalizadorLexicoCodigo(new BufferedReader(new StringReader(codigo)), this, this.manejadorDeCuartetos);
+        parser sintactico = new parser(lex, this, manejadorDeCuartetos);
         sintactico.parse();
-        if(!this.manejadorDeCuartetos.isExistioErrorSemantico()){
-            System.out.println("Cuartetos:"+this.manejadorDeCuartetos.getListaDeCuartetos().size());
-            for (Cuarteto listaDeCuarteto : this.manejadorDeCuartetos.getListaDeCuartetos()) {
-                
-            }
+        if (!this.manejadorDeCuartetos.existioError()) {
+            this.erroresTextArea.append("******************************************************************\n");
+            this.erroresTextArea.append("\tAnalisis finalizado exitosamente\n");
+            this.erroresTextArea.append("******************************************************************\n");
+            manejadorDeCuartetos.escribirCuartetos(this.codigo3dTextArea);
+        } else {//Se reinicia todo 
+            this.codigo3dTextArea.append("-->EL codigo 3D no se puede generar");
+            this.manejadorDeCuartetos.getListaDeCuartetos().clear();
+            this.manejadorDeCuartetos.setNumeroDeTemporal(1);
+            this.manejadorDeCuartetos.setExistioError(false);
         }
     }
 

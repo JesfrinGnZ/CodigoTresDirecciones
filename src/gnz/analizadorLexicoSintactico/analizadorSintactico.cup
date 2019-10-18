@@ -7,22 +7,25 @@ import gnz.backend.cuarteto.ManejadorDeCuartetos;
 import gnz.frontend.editorDeTexto.EditorDeTextoFrame;
 import java_cup.runtime.*;
 import gnz.backend.errores.ManejadorDeErrores;
+import gnz.backend.instrucciones.DeclaracionDeVariable;
+import gnz.backend.instrucciones.ManejadorDeDeclaracion;
 import gnz.backend.manejoDeDatos.*;
 import gnz.backend.tablaDeSimbolos.*;
+import java.util.ArrayList;
 
 parser code {:
     
     private EditorDeTextoFrame editor;
     private ManejadorDeTipos manejadorDeTipos;
     private ManejadorDeCuartetos manCuarteto;
-    private TablaDeSimbolos tablaDeSimbolos;
+    private ManejadorDeTablaDeSimbolos tablaDeSimbolos;
 
     public parser(AnalizadorLexicoCodigo lex,EditorDeTextoFrame editor,ManejadorDeCuartetos manCuarteto){
         super(lex);
         this.editor=editor;
         this.manCuarteto = manCuarteto;
         this.manejadorDeTipos = new ManejadorDeTipos(manCuarteto,editor);
-        this.tablaDeSimbolos = new TablaDeSimbolos(this.editor, this.manCuarteto);
+        this.tablaDeSimbolos = new ManejadorDeTablaDeSimbolos(this.editor, this.manCuarteto);
     }
     
     //Metodo al que se llama automaticamente ante algun error sintactico
@@ -31,7 +34,7 @@ parser code {:
         int linea = s.left;
         //System.out.println("Error SINTACTICO:" + s.value + " en:" + linea + ":" + columna);
         String estructura=(String)s.value;
-        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,true);
+        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,true,manCuarteto);
 
 }
 
@@ -41,7 +44,7 @@ parser code {:
         int linea = s.left;
         //System.out.println("Error SINTACTICO:" + s.value + " en:" + linea + ":" + columna);
         String estructura=(String)s.value;
-        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,false);
+        ManejadorDeErrores.mostrarErrorSintactico(editor.getErroresTextArea(), estructura, linea, columna,false,manCuarteto);
  }
 
     private DatoCodigo accionesParaExpresiones(DatoCodigo i,DatoCodigo e,Operacion operacion){
@@ -96,8 +99,9 @@ non terminal Object     conjuntoDeInstrucciones,unaInstruccion;
 //******************************************************************Declaracion de variables******************************************
 
 non terminal Object     declaracionDeVariables;
-non terminal String     tipoDeVariable;
-non terminal Object     conjuntoDeIdentificadoresParaVariables,unIdentificadorParaVariable;
+non terminal Dato[]     tipoDeVariable;
+non terminal ArrayList<DeclaracionDeVariable>     conjuntoDeIdentificadoresParaVariables;
+non terminal DeclaracionDeVariable unIdentificadorParaVariable;
 non terminal DatoCodigo       expresion,t,f;
 
 //******************************************************************Condicion y comparacion******************************************
@@ -151,8 +155,8 @@ non terminal Object     declaracionDeFuncionesPredefinidas,conjuntoDeTexto,unTex
 /*--------------- 3ra Area: Reglas Semanticas -----------------------*/
 
 
-precedence left OR;
-precedence left AND;
+precedence left ELSE;
+precedence left ELSIF;
 start with inicio;
 
 //******************************************************************Inicio**********************************************************
@@ -162,10 +166,26 @@ inicio::= conjuntoDeInstrucciones;
 
 conjuntoDeInstrucciones::=conjuntoDeInstrucciones unaInstruccion|unaInstruccion;
 
-tipoDeVariable::=BOOLEAN:i|CHAR:i|BYTE:i|INT:i|LONG:i|FLOAT:i|DOUBLE:i|STRING:i
-                {:RESULT=i;:};
+//tipoDeVariable::=BOOLEAN:i|CHAR:i|BYTE:i|INT:i|LONG:i|FLOAT:i|DOUBLE:i|STRING:i
+//                {:RESULT=tablaDeSimbolos.transformarDato(i);:};
 
-unaInstruccion::=error;
+tipoDeVariable::=STRING:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=BOOLEAN:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=CHAR:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=BYTE:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=INT:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=LONG:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=FLOAT:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+tipoDeVariable::=DOUBLE:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+
+unaInstruccion::=error; 
 
 //******************************************************************Expresion**********************************************************
 
@@ -177,8 +197,8 @@ expresion::=expresion:i MENOS t:e
 
 //expresion::=expresion:i AND t:e;
 
-expresion::=expresion:i PORCENTAJE t:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
+//expresion::=expresion:i PORCENTAJE t:e
+//    {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
 expresion::=t:i{:RESULT=i;:};
 
@@ -186,22 +206,24 @@ t::=t:i POR f:e
     {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
 
 t::=t:i DIV f:e
-    {:RESULT=accionesParaExpresiones(i,e,Operacion.POR);:};
+    {:RESULT=accionesParaExpresiones(i,e,Operacion.DIV);:};
+
+t::=t:i PORCENTAJE f:e
+{:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
 t::=f:i{:RESULT=i;:};
 
 f::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
     {:ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
     if(elemento==null){
-    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft);
-    manCuarteto.setExistioErrorSemantico(true);
+    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
     RESULT=null;}//Error semantico, la variable no ha sido declarada
     else{DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),i);
     RESULT=dato;
     }   
     :};
 
-f::=NUMERO_ENTERO:i //Averiguar con los rangos
+f::= NUMERO_ENTERO:i //Averiguar con los rangos
     {:DatoNumerico datoNum=manejadorDeTipos.verificarDato(i);
       DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,datoNum,i);//verificar segun rangos
       RESULT= dato;:};
@@ -227,7 +249,7 @@ f::=DECLARACION_STRING:i
     :};
 
 f::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
-    {:RESULT= i;:};
+    {:System.out.println("RECONOCIDO PARENTESIS");RESULT= i;:};
 
 //******************************************************************COndicion y Comparacion**********************************************************
 
@@ -241,7 +263,9 @@ j::=j NOT q;
 
 j::=q;
 
-q::=comparacion;
+q::= NOT comparacion;
+
+q::= comparacion;
 
 q::=TRUE;
 
@@ -266,15 +290,38 @@ comparacion::=expresion IGUAL_A expresion;
 
 unaInstruccion::=declaracionDeVariables;
 
-declaracionDeVariables::= tipoDeVariable conjuntoDeIdentificadoresParaVariables PCOMA;
+declaracionDeVariables::= tipoDeVariable:datos conjuntoDeIdentificadoresParaVariables:lista PCOMA
+{:
+ManejadorDeDeclaracion manejador = new ManejadorDeDeclaracion(lista, manCuarteto, tablaDeSimbolos, editor);
+manejador.crearVariableComoCuarteto(datosleft,datosright, (TipoDeDato)datos[0],(DatoNumerico)datos[1]);
+:};
 
-conjuntoDeIdentificadoresParaVariables::=conjuntoDeIdentificadoresParaVariables COMA unIdentificadorParaVariable | unIdentificadorParaVariable;
+conjuntoDeIdentificadoresParaVariables::=conjuntoDeIdentificadoresParaVariables:lista COMA unIdentificadorParaVariable:e
+   {:lista.add(e);
+     RESULT= lista;  
+   :} 
+    | 
+    unIdentificadorParaVariable:f
+    {:ArrayList<DeclaracionDeVariable> lista= new ArrayList<>();
+      lista.add(f);
+      RESULT = lista;
+    :};
 
-unIdentificadorParaVariable::=IDENTIFICADOR;
+unIdentificadorParaVariable::=IDENTIFICADOR:i
+{:
+  int n=manCuarteto.getNumeroDeTemporal()-1;
+  DeclaracionDeVariable declaracion = new DeclaracionDeVariable(i,"t"+n,null);
+  RESULT=declaracion;:};
 
-unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION expresion;
+unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe realizar la respectiva comprobacion de tipo,crear la variable, y guardarla en la tabla
+{:
+  int n=manCuarteto.getNumeroDeTemporal()-1;
+  DeclaracionDeVariable declaracion = new DeclaracionDeVariable(i,"t"+n,e);
+  RESULT=declaracion;
+:};
 
-unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion;
+unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion
+{::};
 
 //******************************************************************Asignacion de variables******************************************
 
@@ -305,13 +352,15 @@ unaInstruccion::=declaracionDeEstructuraIf;
 
 declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
 
-//declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO unaInstruccion;
+declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO unaInstruccion;
 
 //******************************************************************Declaracion de estructura IF-ELSE******************************************
 
 unaInstruccion::=declaracionDeEstructuraIfElse;
 
-declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;//Falta una instruccion
+
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE  unaInstruccion ;//Falta una instruccion
 
 
 //******************************************************************Declaracion de estructura ELSEIF******************************************
@@ -325,7 +374,7 @@ declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE 
 
 conjuntoDeElseIf::=conjuntoDeElseIf unElseIf | unElseIf;
 
-unElseIf::=ELSIF PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+unElseIf::=ELSIF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
 
 
 

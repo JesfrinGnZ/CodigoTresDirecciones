@@ -3,6 +3,7 @@
 package gnz.backend.analizadores;
 import java_cup.runtime.*;
 import static gnz.backend.analizadores.sym.*;
+import gnz.backend.cuarteto.ManejadorDeCuartetos;
 import gnz.frontend.editorDeTexto.EditorDeTextoFrame;
 import gnz.backend.errores.ManejadorDeErrores;
 %% //------------------>2da area<--------------------------    
@@ -23,6 +24,8 @@ Identificador = ([:jletter:] | [-] | [_] | [$] )+
 Digitos = 0 | [1-9][0-9]*
 %{
     private EditorDeTextoFrame editor;
+    private ManejadorDeCuartetos manCuarteto;
+
 
   private Symbol symbol(int type) {
     return new Symbol(type, yyline+1, yycolumn+1);
@@ -33,9 +36,10 @@ Digitos = 0 | [1-9][0-9]*
     return new Symbol(type, yyline+1, yycolumn+1, value);
   }
 
-    public AnalizadorLexicoCodigo(java.io.Reader in,EditorDeTextoFrame editor) {
+    public AnalizadorLexicoCodigo(java.io.Reader in,EditorDeTextoFrame editor,ManejadorDeCuartetos manCuarteto) {
     this.zzReader = in;
     this.editor=editor;
+    this.manCuarteto = manCuarteto;
   }
 
 %}
@@ -114,7 +118,7 @@ Digitos = 0 | [1-9][0-9]*
    //************************Estructura IF**************************************
 
     "IF"    {return symbol(IF,yytext());}
-    "ELSIF" {return symbol(ELSIF,yytext());}
+    "ELSEIF" {return symbol(ELSIF,yytext());}
     "ELSE"  {return symbol(ELSE,yytext());}
 
    //************************Estructura WHILE**************************************
@@ -151,7 +155,7 @@ Digitos = 0 | [1-9][0-9]*
 
 //<<EOF>>                 { return symbol(EOF);
 
-[^]     {ManejadorDeErrores.mostrarErrorLexico(this.editor.getErroresTextArea(), yytext(), yyline+1, yycolumn+1);}
+[^]     {ManejadorDeErrores.mostrarErrorLexico(this.editor.getErroresTextArea(), yytext(), yyline+1, yycolumn+1,manCuarteto);}
 
 
 

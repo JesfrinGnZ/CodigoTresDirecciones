@@ -7,31 +7,44 @@ package gnz.backend.cuarteto;
 
 import gnz.backend.manejoDeDatos.Operacion;
 import java.util.ArrayList;
+import javax.swing.JTextArea;
 
 /**
  *
  * @author jesfrin
  */
 public class ManejadorDeCuartetos {
-    
+
     private ArrayList<Cuarteto> listaDeCuartetos;
-    private boolean existioErrorSemantico;
+    private boolean existioError;
     private int numeroDeTemporal;
-    
-    public ManejadorDeCuartetos(){
-        this.listaDeCuartetos= new ArrayList<>();
-        this.existioErrorSemantico=false;
-        this.numeroDeTemporal=1;
+
+    public ManejadorDeCuartetos() {
+        this.listaDeCuartetos = new ArrayList<>();
+        this.existioError = false;
+        this.numeroDeTemporal = 1;
     }
 
-    public String crearCuarteto(Operacion operando,String operador1,String operador2){
-        String temporal="t"+this.numeroDeTemporal;
+    public String crearCuarteto(Operacion operando, String operador1, String operador2) {
+        String temporal = "t" + this.numeroDeTemporal;
         numeroDeTemporal++;
         Cuarteto cuarteto = new Cuarteto(operando, operador1, operador2, temporal);
         this.listaDeCuartetos.add(cuarteto);
         return temporal;
     }
-    
+
+    public void escribirCuartetos(JTextArea txt) {
+        for (Cuarteto cuarteto : listaDeCuartetos) {
+            if (cuarteto.getOperando() == null && cuarteto.getOperador1() == null) {
+                txt.append(cuarteto.getResultado() + "=" + cuarteto.getOperador2() + "\n");
+            } else {
+                txt.append(cuarteto.getResultado() + "=" + cuarteto.getOperador1() + " " + cuarteto.getOperando().getSigno() + " " + cuarteto.getOperador2() + "\n");
+            }
+        }
+        this.listaDeCuartetos.clear();
+        this.numeroDeTemporal = 1;
+    }
+
     public ArrayList<Cuarteto> getListaDeCuartetos() {
         return listaDeCuartetos;
     }
@@ -40,14 +53,20 @@ public class ManejadorDeCuartetos {
         this.listaDeCuartetos = listaDeCuartetos;
     }
 
-    public boolean isExistioErrorSemantico() {
-        return existioErrorSemantico;
+    public boolean existioError() {
+        return existioError;
     }
 
-    public void setExistioErrorSemantico(boolean existioErrorSemantico) {
-        this.existioErrorSemantico = existioErrorSemantico;
+    public void setExistioError(boolean existioErrorSemantico) {
+        this.existioError = existioErrorSemantico;
     }
-    
-    
-    
+
+    public int getNumeroDeTemporal() {
+        return numeroDeTemporal;
+    }
+
+    public void setNumeroDeTemporal(int numeroDeTemporal) {
+        this.numeroDeTemporal = numeroDeTemporal;
+    }
+
 }

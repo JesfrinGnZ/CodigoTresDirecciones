@@ -4,20 +4,22 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/manejoDeDatos/ManejadorDeTipos.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/errores/ManejadorDeErrores.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/analizadorLexicoSintactico/analizadorLexico.flex</file>
-            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/frontend/editorDeTexto/ManejadorDeArchivos.java</file>
-            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/tablaDeSimbolos/TablaDeSimbolos.java</file>
-            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/analizadorLexicoSintactico/ejecutar.sh</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/instrucciones/ManejadorDeDeclaracion.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/instrucciones/DeclaracionDeVariable.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/cuarteto/ManejadorDeCuartetos.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/tablaDeSimbolos/ManejadorDeTablaDeSimbolos.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/analizadores/parser.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/manejoDeDatos/DatoCodigo.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/manejoDeDatos/Operacion.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/manejoDeDatos/TipoDeDato.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/analizadores/AnalizadorLexicoCodigo.java</file>
-            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/cuarteto/Cuarteto.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/frontend/editorDeTexto/EditorDeTextoFrame.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/cuarteto/Cuarteto.java</file>
+            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/manejoDeDatos/DatoNumerico.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/tablaDeSimbolos/ElementoDeTablaDeSimbolos.java</file>
             <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/analizadorLexicoSintactico/analizadorSintactico.cup</file>
-            <file>file:/home/jesfrin/NetBeansProjects/Proyecto1Compi2/src/gnz/backend/analizadores/sym.java</file>
         </group>
     </open-files>
 </project-private>

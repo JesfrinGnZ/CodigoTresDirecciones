@@ -6,8 +6,9 @@ package gnz.backend.manejoDeDatos;
  */
 public enum DatoNumerico implements Dato{
 
-    DOUBLE, FLOAT, LONG, INT(Math.pow(-2, 31),Math.pow(2, 31)), BYTE(Math.pow(-2, 8),Math.pow(2, 8)),CHAR(Math.pow(-2, 16),Math.pow(2, 16));
-
+    //DOUBLE, FLOAT, LONG, INT(-1*Math.pow(2, 31),Math.pow(2, 31)), CHAR(-1*Math.pow(2, 16),Math.pow(2, 16)),BYTE(-1*Math.pow(2, 8),Math.pow(2, 8));
+    BYTE(-1*Math.pow(2, 8),Math.pow(2, 8)),CHAR(-1*Math.pow(2, 16),Math.pow(2, 16)),INT(-1*Math.pow(2, 31),Math.pow(2, 31)),LONG,FLOAT,DOUBLE;
+    
     private double limiteInferior;
     private double limiteSuperior;
 
