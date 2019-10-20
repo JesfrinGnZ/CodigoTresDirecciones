@@ -63,8 +63,13 @@ public class ManejadorDeTablaDeSimbolos {
     }
 
     public void crearElemento(int linea, int columna, String nombre, TipoDeDato tipoDeDato, DatoNumerico datoNum, int dimension) {
+        ElementoDeTablaDeSimbolos elemento;
         if (buscarElemento(nombre) == null) {
-            ElementoDeTablaDeSimbolos elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, datoNum.getLimiteInferior(), datoNum.getLimiteSuperior(), '0');
+            if (datoNum == null) {
+                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, 0,0, '0');
+            } else {
+                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, datoNum.getLimiteInferior(), datoNum.getLimiteSuperior(), '0');
+            }
             this.tabla.add(elemento);
             posicion++;
         } else {

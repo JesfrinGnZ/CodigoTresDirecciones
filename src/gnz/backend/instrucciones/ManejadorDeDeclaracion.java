@@ -7,6 +7,7 @@ package gnz.backend.instrucciones;
 
 import gnz.backend.cuarteto.Cuarteto;
 import gnz.backend.cuarteto.ManejadorDeCuartetos;
+import gnz.backend.cuarteto.TipoDeCuarteto;
 import gnz.backend.errores.ManejadorDeErrores;
 import gnz.backend.manejoDeDatos.Dato;
 import gnz.backend.manejoDeDatos.DatoCodigo;
@@ -22,35 +23,57 @@ import java.util.ArrayList;
  */
 public class ManejadorDeDeclaracion {
 
-    private ArrayList<DeclaracionDeVariable> listaDeDeclaraciones;
     private final ManejadorDeCuartetos manCuarteto;
-    private ManejadorDeTablaDeSimbolos manTabalDeSimbolos;
+    private final ManejadorDeTablaDeSimbolos manTabalDeSimbolos;
     private final EditorDeTextoFrame editor;
 
-    public ManejadorDeDeclaracion(ArrayList<DeclaracionDeVariable> listaDeDeclaraciones, ManejadorDeCuartetos manCuarteto, ManejadorDeTablaDeSimbolos manTabalDeSimbolos, EditorDeTextoFrame editor) {
-        this.listaDeDeclaraciones = listaDeDeclaraciones;
+    public ManejadorDeDeclaracion(ManejadorDeCuartetos manCuarteto, ManejadorDeTablaDeSimbolos manTabalDeSimbolos, EditorDeTextoFrame editor) {
         this.manCuarteto = manCuarteto;
         this.editor = editor;
-        this.manTabalDeSimbolos=manTabalDeSimbolos;
+        this.manTabalDeSimbolos = manTabalDeSimbolos;
     }
 
-    public void crearVariableComoCuarteto(int linea, int columna, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum) {
+    public void asignarValorABooleano(String nombreDeVariable, int linea, int columna) {//Verificar existencia de variable, para luego ver si se asigna el valor
+        if (manTabalDeSimbolos.buscarElemento(nombreDeVariable) == null) {
+            int tamanoDeLista = manCuarteto.getListaDeCuartetos().size();
+            String label1 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 2).getResultado();
+            String label0 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 1).getResultado();
+            String labelrestoDeCodigo="L"+manCuarteto.generarEtiqueta();
+            Cuarteto asig1 = new Cuarteto(null, null, null, label1, TipoDeCuarteto.ETIQUETA);
+            Cuarteto asignacionBooleana1 = new Cuarteto(null, null, "1", nombreDeVariable, TipoDeCuarteto.EXPRESION);
+            //Goto
+            Cuarteto nuevaGoto = new Cuarteto(null, null, null, labelrestoDeCodigo, TipoDeCuarteto.GOTOETIQUETA);
+            Cuarteto asig0 = new Cuarteto(null, null, null, label0, TipoDeCuarteto.ETIQUETA);
+            Cuarteto asignacionBooleana0 = new Cuarteto(null, null, "0", nombreDeVariable, TipoDeCuarteto.EXPRESION);
+            Cuarteto restoDeCodigo = new Cuarteto(null, null, null,labelrestoDeCodigo, TipoDeCuarteto.ETIQUETA);
+
+            this.manCuarteto.getListaDeCuartetos().add(asig1);
+            this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana1);
+            this.manCuarteto.getListaDeCuartetos().add(nuevaGoto);
+            this.manCuarteto.getListaDeCuartetos().add(asig0);
+            this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana0);
+            this.manCuarteto.getListaDeCuartetos().add(restoDeCodigo);
+            manTabalDeSimbolos.crearElemento(linea, columna, nombreDeVariable, TipoDeDato.BOOLEANO, null, 1);
+
+        } else {
+            String mensaje = "La variable " + nombreDeVariable + " ya ha sido declarada";
+            ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
+        }
+
+    }
+
+    public void crearVariableComoCuarteto(DeclaracionDeVariable declaracion, int linea, int columna, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum) {
         String tFinal;
-        for (DeclaracionDeVariable declaracion : listaDeDeclaraciones) {
-            boolean seDebeSeguir = verificarYCrearTipoDeVariable(linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, declaracion.getDatoCodigo());
-            if (seDebeSeguir) {
-                tFinal = declaracion.getFinCuarteto();//De esta forma habra asignacion
-                if (tFinal != null) {
-                    for (Cuarteto cuarteto : this.manCuarteto.getListaDeCuartetos()) {
-                        if (cuarteto.getResultado().equals(tFinal)) {
-                            int poscionFinal = this.manCuarteto.getListaDeCuartetos().indexOf(cuarteto);
-                            this.manCuarteto.getListaDeCuartetos().add(poscionFinal + 1, new Cuarteto(null, null, tFinal, declaracion.getNombreDeVariable()));
-                            break;
-                        }
-                    }
+        boolean seDebeSeguir = verificarYCrearTipoDeVariable(linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, declaracion.getDatoCodigo());
+        if (seDebeSeguir) {
+            tFinal = declaracion.getFinCuarteto();//De esta forma habra asignacion
+            if (declaracion.getDatoCodigo() != null) {//De esta forma habra asignacion
+                if (tFinal == null) {
+                    this.manCuarteto.getListaDeCuartetos().add(new Cuarteto(null, null, declaracion.getDatoCodigo().getValor(), declaracion.getNombreDeVariable(), TipoDeCuarteto.EXPRESION));
+                } else {
+                    this.manCuarteto.getListaDeCuartetos().add(new Cuarteto(null, null, tFinal, declaracion.getNombreDeVariable(), TipoDeCuarteto.EXPRESION));
                 }
-            } else {
-                break;
+
             }
         }
     }
@@ -70,23 +93,23 @@ public class ManejadorDeDeclaracion {
         if (manTabalDeSimbolos.buscarElemento(declaracion.getNombreDeVariable()) == null) {//La variable aun no existe
             if (datoAsignacion == null) {//No hubo asignacion
                 //Ya solo se crea la variable
-                manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado,datoNum, 1);
+                manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
                 return true;
             } else {
                 if (tipoDeDatoDeclarado == TipoDeDato.CADENA && datoAsignacion.getDato() == TipoDeDato.CADENA) {
                     //Ya solo se crea la variable
-                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado,datoNum, 1);
+                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
                     return true;
                 } else if (tipoDeDatoDeclarado == TipoDeDato.BOOLEANO && datoAsignacion.getDato() == TipoDeDato.BOOLEANO) {
                     //Ya solo se crea la variable
-                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado,datoNum, 1);
+                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
                     return true;
                 } else if (tipoDeDatoDeclarado == TipoDeDato.NUMERICO && datoAsignacion.getDato() == TipoDeDato.NUMERICO) {//Es numerico
-                    int n=datoNum.ordinal();
-                    int n1=datoAsignacion.getDatoNumerico().ordinal();
+                    int n = datoNum.ordinal();
+                    int n1 = datoAsignacion.getDatoNumerico().ordinal();
                     if (datoNum.ordinal() >= datoAsignacion.getDatoNumerico().ordinal()) {//POs esta bien
                         //Ya solo se crea la variable
-                        manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado,datoNum, 1);
+                        manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
                         return true;
                     } else {
                         //Error semantico, no se puede transformar
@@ -106,14 +129,6 @@ public class ManejadorDeDeclaracion {
 
         }
         return false;
-    }
-
-    public ArrayList<DeclaracionDeVariable> getListaDeDeclaraciones() {
-        return listaDeDeclaraciones;
-    }
-
-    public void setListaDeDeclaraciones(ArrayList<DeclaracionDeVariable> listaDeDeclaraciones) {
-        this.listaDeDeclaraciones = listaDeDeclaraciones;
     }
 
 }

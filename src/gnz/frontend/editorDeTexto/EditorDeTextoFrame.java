@@ -435,11 +435,13 @@ public class EditorDeTextoFrame extends javax.swing.JFrame {
             this.erroresTextArea.append("******************************************************************\n");
             this.erroresTextArea.append("\tAnalisis finalizado exitosamente\n");
             this.erroresTextArea.append("******************************************************************\n");
+            System.out.println("LISTA DE CUARTETOS:"+this.manejadorDeCuartetos.getListaDeCuartetos().size());
             manejadorDeCuartetos.escribirCuartetos(this.codigo3dTextArea);
         } else {//Se reinicia todo 
             this.codigo3dTextArea.append("-->EL codigo 3D no se puede generar");
             this.manejadorDeCuartetos.getListaDeCuartetos().clear();
             this.manejadorDeCuartetos.setNumeroDeTemporal(1);
+            this.manejadorDeCuartetos.setNumeroDeEtiqueta(1);
             this.manejadorDeCuartetos.setExistioError(false);
         }
     }

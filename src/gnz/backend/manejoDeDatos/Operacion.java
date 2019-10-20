@@ -12,7 +12,8 @@ package gnz.backend.manejoDeDatos;
  */
 public enum Operacion {
     
-    MAS("+"),MENOS("-"),POR("*"),DIV("/"),AND,OR,NOT,RESTO("%");
+    MAS("+"),MENOS("-"),POR("*"),DIV("/"),AND,OR,NOT,RESTO("%"),MAYOR(">"),MENOR("<"),MAYORIGUAL(">="),
+    MENORIGUAL("<="),IGUALA("=="),DISTINTODE("!=");
     
     private String signo;
     
