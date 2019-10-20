@@ -7,8 +7,7 @@ import gnz.backend.cuarteto.ManejadorDeCuartetos;
 import gnz.frontend.editorDeTexto.EditorDeTextoFrame;
 import java_cup.runtime.*;
 import gnz.backend.errores.ManejadorDeErrores;
-import gnz.backend.instrucciones.DeclaracionDeVariable;
-import gnz.backend.instrucciones.ManejadorDeDeclaracion;
+import gnz.backend.instrucciones.*;
 import gnz.backend.manejoDeDatos.*;
 import gnz.backend.tablaDeSimbolos.*;
 import java.util.ArrayList;
@@ -19,6 +18,8 @@ parser code {:
     private ManejadorDeTipos manejadorDeTipos;
     private ManejadorDeCuartetos manCuarteto;
     private ManejadorDeTablaDeSimbolos tablaDeSimbolos;
+    private Dato[] dato;
+    private ManejadorDeDeclaracion manejadorDeclaracion;
 
     public parser(AnalizadorLexicoCodigo lex,EditorDeTextoFrame editor,ManejadorDeCuartetos manCuarteto){
         super(lex);
@@ -26,6 +27,7 @@ parser code {:
         this.manCuarteto = manCuarteto;
         this.manejadorDeTipos = new ManejadorDeTipos(manCuarteto,editor);
         this.tablaDeSimbolos = new ManejadorDeTablaDeSimbolos(this.editor, this.manCuarteto);
+        this.manejadorDeclaracion = new ManejadorDeDeclaracion( manCuarteto, tablaDeSimbolos, editor);
     }
     
     //Metodo al que se llama automaticamente ante algun error sintactico
@@ -107,7 +109,7 @@ non terminal DatoCodigo       expresion,t,f;
 //******************************************************************Condicion y comparacion******************************************
 
 non terminal DatoCodigo     comparacion;
-non terminal Object condicion,j,q;
+non terminal DosEtiquetas condicion;
 
 
 //******************************************************************Asignacion de variables******************************************
@@ -157,6 +159,7 @@ non terminal Object     declaracionDeFuncionesPredefinidas,conjuntoDeTexto,unTex
 
 precedence left ELSE;
 precedence left ELSIF;
+precedence left NOT, AND, OR;
 precedence left MAS, MENOS;
 precedence left POR, DIV,PORCENTAJE;
 start with inicio;
@@ -168,24 +171,14 @@ inicio::= conjuntoDeInstrucciones;
 
 conjuntoDeInstrucciones::=conjuntoDeInstrucciones unaInstruccion|unaInstruccion;
 
-//tipoDeVariable::=BOOLEAN:i|CHAR:i|BYTE:i|INT:i|LONG:i|FLOAT:i|DOUBLE:i|STRING:i
-//                {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=STRING:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=BOOLEAN:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=CHAR:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=BYTE:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=INT:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=LONG:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=FLOAT:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
-
-tipoDeVariable::=DOUBLE:i {:RESULT=tablaDeSimbolos.transformarDato(i);:};
+tipoDeVariable::=STRING:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=BOOLEAN:i {:dato=tablaDeSimbolos.transformarDato("booleano");RESULT=dato;:};
+tipoDeVariable::=CHAR:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=BYTE:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=INT:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=LONG:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=FLOAT:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
+tipoDeVariable::=DOUBLE:i {:dato=tablaDeSimbolos.transformarDato(i);RESULT=dato;:};
 
 unaInstruccion::=error; 
 
@@ -199,7 +192,9 @@ expresion::=expresion:i PORCENTAJE expresion:e {:RESULT=accionesParaExpresiones(
 
 
 expresion::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
-    {:ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
+    {:
+    manCuarteto.setInicioDeExpresion();
+    ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
     if(elemento==null){
     ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
     RESULT=null;}//Error semantico, la variable no ha sido declarada
@@ -209,27 +204,37 @@ expresion::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su
     :};
 
 expresion::= NUMERO_ENTERO:i //Averiguar con los rangos
-    {:DatoNumerico datoNum=manejadorDeTipos.verificarDato(i);
+    {:
+    manCuarteto.setInicioDeExpresion();
+      DatoNumerico datoNum=manejadorDeTipos.verificarDato(i);
       DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,datoNum,i);//verificar segun rangos
       RESULT= dato;:};
 
 expresion::=NUMERO_DECIMAL:i
-    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.DOUBLE,i);
+    {:
+    manCuarteto.setInicioDeExpresion();
+    DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.DOUBLE,i);
       RESULT=dato;
     :};
 
 expresion::=NUMERO_DECIMALF:i
-    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.FLOAT,i);
+    {:
+    manCuarteto.setInicioDeExpresion();
+    DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,DatoNumerico.FLOAT,i);
      RESULT=dato;
     :};
 
 expresion::=DECLARACION_CARACTER:i
-    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,null,i.substring(1,2));
+    {:
+    manCuarteto.setInicioDeExpresion();
+    DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.NUMERICO,null,i.substring(1,2));
      RESULT=dato;
     :};
 
 expresion::=DECLARACION_STRING:i
-    {:DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.CADENA,null,i.substring(1,i.length()-1));
+    {:
+    manCuarteto.setInicioDeExpresion();
+    DatoCodigo dato= new DatoCodigo(ileft,iright,TipoDeDato.CADENA,null,i.substring(1,i.length()-1));
      RESULT=dato;
     :};
 
@@ -238,37 +243,66 @@ expresion::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
 
 //******************************************************************COndicion y Comparacion**********************************************************
 
-condicion::= condicion AND j;
+condicion::= condicion:t1 AND 
+                {:if(t1 !=null){//Es la primera condicion
+                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2());
+                }   
+                :}
+                condicion:t2 //Es la segunda parte de un AND
+                {:
+                manCuarteto.crearSegundoCuartetoParaAnd(t2.getOperacion(), t2.getDato1(), t2.getDato2());
+                RESULT =null;:};
 
-condicion::= condicion OR j;
 
-condicion::=j;
-  
-j::=j NOT q;
+condicion::= condicion:t1 OR 
+                {:if(t1 !=null){//Es la primera condicion
+                    if(t1.getTipoDeBoolean()|!t1.getTipoDeBoolean()){
+                    System.out.println("NULLLLLLLLLLLLLLLLL");
+                    }else{
+                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2());
+                    }
+                }   
+                :}
+                condicion:t2 //Es la segunda parte de un OR
+                {:
+                if(t2.getTipoDeBoolean()|!t2.getTipoDeBoolean()){
+                    System.out.println("NULLLLLLLLLLLLLLLLL");
+                }else{
+                   manCuarteto.crearSegundoCuartetoParaOr(t2.getOperacion(), t2.getDato1(), t2.getDato2());
+                }
+                RESULT =null;:};
 
-j::=q;
+condicion::= NOT condicion:t1;
 
-q::= NOT comparacion;
+condicion::=TRUE:i 
+{:
+	DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, true, null);
+        RESULT= dosEtiquetas;
+:};
 
-q::= comparacion;
+condicion::=FALSE:e
+{:
+        DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, false, null);
+        RESULT= dosEtiquetas;
+:};
 
-q::=TRUE;
+condicion::=expresion:ex1 MENOR expresion:ex2//Aca se daca el temporal de cada expresion
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENOR);:};
 
-q::=FALSE;
+condicion::=expresion:ex1 MAYOR expresion:ex2
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYOR);:};
 
-//q::=IDENTIFICADOR; 
+condicion::=expresion:ex1 MENOR_IGUAL expresion:ex2
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENORIGUAL);:};
 
-comparacion::=expresion MENOR expresion;
+condicion::=expresion:ex1 MAYOR_IGUAL expresion:ex2
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYORIGUAL);:};
 
-comparacion::=expresion MAYOR expresion;
+condicion::=expresion:ex1 DISTINTO_DE expresion:ex2
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.DISTINTODE);:};
 
-comparacion::=expresion MENOR_IGUAL expresion;
-
-comparacion::=expresion MAYOR_IGUAL expresion;
-
-comparacion::=expresion DISTINTO_DE expresion;
-
-comparacion::=expresion IGUAL_A expresion;
+condicion::=expresion:ex1 IGUAL_A expresion:ex2
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.IGUALA);:};
 
 //************************************************************************INSTRUCCIONES*****************************************************
 //******************************************************************Declaracion de variables******************************************
@@ -277,8 +311,8 @@ unaInstruccion::=declaracionDeVariables;
 
 declaracionDeVariables::= tipoDeVariable:datos conjuntoDeIdentificadoresParaVariables:lista PCOMA
 {:
-ManejadorDeDeclaracion manejador = new ManejadorDeDeclaracion(lista, manCuarteto, tablaDeSimbolos, editor);
-manejador.crearVariableComoCuarteto(datosleft,datosright, (TipoDeDato)datos[0],(DatoNumerico)datos[1]);
+//ManejadorDeDeclaracion manejador = new ManejadorDeDeclaracion(lista, manCuarteto, tablaDeSimbolos, editor);
+//manejador.crearVariableComoCuarteto(datosleft,datosright, (TipoDeDato)datos[0],(DatoNumerico)datos[1]);
 :};
 
 conjuntoDeIdentificadoresParaVariables::=conjuntoDeIdentificadoresParaVariables:lista COMA unIdentificadorParaVariable:e
@@ -296,6 +330,7 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i
 {:
   int n=manCuarteto.getNumeroDeTemporal()-1;
   DeclaracionDeVariable declaracion = new DeclaracionDeVariable(i,"t"+n,null);
+  manejadorDeclaracion.verificarYCrearTipoDeVariable(ileft, iright, declaracion, (TipoDeDato)dato[0], (DatoNumerico)dato[1],null);
   RESULT=declaracion;:};
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe realizar la respectiva comprobacion de tipo,crear la variable, y guardarla en la tabla
@@ -307,11 +342,24 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe 
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(i,"t"+n,e);
                 }
+manejadorDeclaracion.crearVariableComoCuarteto(declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
                     RESULT=declaracion;
 :};
 
-unIdentificadorParaVariable::=IDENTIFICADOR ASIGNACION condicion
-{::};
+unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION condicion:dosEtiquetas
+{:
+                TipoDeDato d= (TipoDeDato)dato[0];
+                if(d==TipoDeDato.BOOLEANO){
+                    if(dosEtiquetas!=null){
+                        manCuarteto.crearCuartetoPrimeroParaComparacion(dosEtiquetas.getOperacion(), dosEtiquetas.getDato1(),dosEtiquetas.getDato2());
+                        }
+                        manejadorDeclaracion.asignarValorABooleano(i, ileft, iright);
+                }else{
+                    String mensaje="No se puede transaformar a booleano";
+                  ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft, iright, manCuarteto);
+                }
+
+:};
 
 //******************************************************************Asignacion de variables******************************************
 
