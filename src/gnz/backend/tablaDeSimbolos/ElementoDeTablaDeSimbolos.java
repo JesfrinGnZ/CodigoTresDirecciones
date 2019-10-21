@@ -18,8 +18,9 @@ public class ElementoDeTablaDeSimbolos {
     private double minimo;
     private double maximo;
     private char ambito;
+    private boolean esArreglo;
 
-    public ElementoDeTablaDeSimbolos(int posicion, String nombre, TipoDeDato tipoBase, DatoNumerico tipoNumerico, int dimension, double minimo, double maximo, char ambito) {
+    public ElementoDeTablaDeSimbolos(int posicion, String nombre, TipoDeDato tipoBase, DatoNumerico tipoNumerico, int dimension, double minimo, double maximo, char ambito,boolean esArreglo) {
         this.posicion = posicion;
         this.nombre = nombre;
         this.tipoBase = tipoBase;
@@ -28,6 +29,7 @@ public class ElementoDeTablaDeSimbolos {
         this.minimo = minimo;
         this.maximo = maximo;
         this.ambito = ambito;
+        this.esArreglo=esArreglo;
     }
 
     public int getPosicion() {
@@ -92,6 +94,14 @@ public class ElementoDeTablaDeSimbolos {
 
     public void setAmbito(char ambito) {
         this.ambito = ambito;
+    }
+
+    public boolean isEsArreglo() {
+        return esArreglo;
+    }
+
+    public void setEsArreglo(boolean esArreglo) {
+        this.esArreglo = esArreglo;
     }
 
 }

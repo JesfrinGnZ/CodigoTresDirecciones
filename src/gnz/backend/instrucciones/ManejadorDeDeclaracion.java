@@ -34,37 +34,38 @@ public class ManejadorDeDeclaracion {
     }
 
     public void asignarValorABooleano(String nombreDeVariable, int linea, int columna) {//Verificar existencia de variable, para luego ver si se asigna el valor
-        if (manTabalDeSimbolos.buscarElemento(nombreDeVariable) == null) {
-            int tamanoDeLista = manCuarteto.getListaDeCuartetos().size();
-            String label1 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 2).getResultado();
-            String label0 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 1).getResultado();
-            String labelrestoDeCodigo="L"+manCuarteto.generarEtiqueta();
-            Cuarteto asig1 = new Cuarteto(null, null, null, label1, TipoDeCuarteto.ETIQUETA);
-            Cuarteto asignacionBooleana1 = new Cuarteto(null, null, "1", nombreDeVariable, TipoDeCuarteto.EXPRESION);
-            //Goto
-            Cuarteto nuevaGoto = new Cuarteto(null, null, null, labelrestoDeCodigo, TipoDeCuarteto.GOTOETIQUETA);
-            Cuarteto asig0 = new Cuarteto(null, null, null, label0, TipoDeCuarteto.ETIQUETA);
-            Cuarteto asignacionBooleana0 = new Cuarteto(null, null, "0", nombreDeVariable, TipoDeCuarteto.EXPRESION);
-            Cuarteto restoDeCodigo = new Cuarteto(null, null, null,labelrestoDeCodigo, TipoDeCuarteto.ETIQUETA);
+        if (!manCuarteto.existioError()) {
+            if (manTabalDeSimbolos.buscarElemento(nombreDeVariable) == null) {
+                int tamanoDeLista = manCuarteto.getListaDeCuartetos().size();
+                String label1 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 2).getResultado();
+                String label0 = manCuarteto.getListaDeCuartetos().get(tamanoDeLista - 1).getResultado();
+                String labelrestoDeCodigo = "L" + manCuarteto.generarEtiqueta();
+                Cuarteto asig1 = new Cuarteto(null, null, null, label1, TipoDeCuarteto.ETIQUETA);
+                Cuarteto asignacionBooleana1 = new Cuarteto(null, null, "1", nombreDeVariable, TipoDeCuarteto.EXPRESION);
+                //Goto
+                Cuarteto nuevaGoto = new Cuarteto(null, null, null, labelrestoDeCodigo, TipoDeCuarteto.GOTOETIQUETA);
+                Cuarteto asig0 = new Cuarteto(null, null, null, label0, TipoDeCuarteto.ETIQUETA);
+                Cuarteto asignacionBooleana0 = new Cuarteto(null, null, "0", nombreDeVariable, TipoDeCuarteto.EXPRESION);
+                Cuarteto restoDeCodigo = new Cuarteto(null, null, null, labelrestoDeCodigo, TipoDeCuarteto.ETIQUETA);
 
-            this.manCuarteto.getListaDeCuartetos().add(asig1);
-            this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana1);
-            this.manCuarteto.getListaDeCuartetos().add(nuevaGoto);
-            this.manCuarteto.getListaDeCuartetos().add(asig0);
-            this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana0);
-            this.manCuarteto.getListaDeCuartetos().add(restoDeCodigo);
-            manTabalDeSimbolos.crearElemento(linea, columna, nombreDeVariable, TipoDeDato.BOOLEANO, null, 1);
+                this.manCuarteto.getListaDeCuartetos().add(asig1);
+                this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana1);
+                this.manCuarteto.getListaDeCuartetos().add(nuevaGoto);
+                this.manCuarteto.getListaDeCuartetos().add(asig0);
+                this.manCuarteto.getListaDeCuartetos().add(asignacionBooleana0);
+                this.manCuarteto.getListaDeCuartetos().add(restoDeCodigo);
+                manTabalDeSimbolos.crearElemento(linea, columna, nombreDeVariable, TipoDeDato.BOOLEANO, null, 1, false);
 
-        } else {
-            String mensaje = "La variable " + nombreDeVariable + " ya ha sido declarada";
-            ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
+            } else {
+                String mensaje = "La variable " + nombreDeVariable + " ya ha sido declarada";
+                ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
+            }
         }
-
     }
 
-    public void crearVariableComoCuarteto(DeclaracionDeVariable declaracion, int linea, int columna, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum) {
+    public void crearVariableComoCuarteto(boolean esAsignacion,DeclaracionDeVariable declaracion, int linea, int columna, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum) {
         String tFinal;
-        boolean seDebeSeguir = verificarYCrearTipoDeVariable(linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, declaracion.getDatoCodigo());
+        boolean seDebeSeguir = verificarYCrearTipoDeVariable(esAsignacion,linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, declaracion.getDatoCodigo());
         if (seDebeSeguir) {
             tFinal = declaracion.getFinCuarteto();//De esta forma habra asignacion
             if (declaracion.getDatoCodigo() != null) {//De esta forma habra asignacion
@@ -88,47 +89,70 @@ public class ManejadorDeDeclaracion {
      * @param datoAsignacion//El tipo de dato en la asignacion
      * @return
      */
-    public boolean verificarYCrearTipoDeVariable(int linea, int columna, DeclaracionDeVariable declaracion, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum, DatoCodigo datoAsignacion) {
+    public boolean verificarYCrearTipoDeVariable(boolean esAsignacion, int linea, int columna, DeclaracionDeVariable declaracion, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum, DatoCodigo datoAsignacion) {
         //Verificar que la variable no haya sido creada
-        if (manTabalDeSimbolos.buscarElemento(declaracion.getNombreDeVariable()) == null) {//La variable aun no existe
-            if (datoAsignacion == null) {//No hubo asignacion
-                //Ya solo se crea la variable
-                manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
-                return true;
+        if (esAsignacion) {
+            if (manTabalDeSimbolos.buscarElemento(declaracion.getNombreDeVariable()) == null) {//La variable aun no existe
+               return  crearVarificarTipo(linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, datoAsignacion);
             } else {
-                if (tipoDeDatoDeclarado == TipoDeDato.CADENA && datoAsignacion.getDato() == TipoDeDato.CADENA) {
+                //Error la variable ya ahasido declarada
+                String mensaje = "La variable " + declaracion.getNombreDeVariable() + " ya ha sido declarada";
+                ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
+            }
+            return false;
+        } else {
+            return crearVarificarTipo(linea, columna, declaracion, tipoDeDatoDeclarado, datoNum, datoAsignacion);
+        }
+    }
+
+    private boolean crearVarificarTipo(int linea, int columna, DeclaracionDeVariable declaracion, TipoDeDato tipoDeDatoDeclarado, DatoNumerico datoNum, DatoCodigo datoAsignacion) {
+        if (datoAsignacion == null) {//No hubo asignacion
+            //Ya solo se crea la variable
+            manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1, false);
+            return true;
+        } else {
+            if (tipoDeDatoDeclarado == TipoDeDato.CADENA && datoAsignacion.getDato() == TipoDeDato.CADENA) {
+                //Ya solo se crea la variable
+                manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1, false);
+                return true;
+            } else if (tipoDeDatoDeclarado == TipoDeDato.BOOLEANO && datoAsignacion.getDato() == TipoDeDato.BOOLEANO) {
+                //Ya solo se crea la variable
+                manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1, false);
+                return true;
+            } else if (tipoDeDatoDeclarado == TipoDeDato.NUMERICO && datoAsignacion.getDato() == TipoDeDato.NUMERICO) {//Es numerico
+                int n = datoNum.ordinal();
+                int n1 = datoAsignacion.getDatoNumerico().ordinal();
+                if (datoNum.ordinal() >= datoAsignacion.getDatoNumerico().ordinal()) {//POs esta bien
                     //Ya solo se crea la variable
-                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
+                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1, false);
                     return true;
-                } else if (tipoDeDatoDeclarado == TipoDeDato.BOOLEANO && datoAsignacion.getDato() == TipoDeDato.BOOLEANO) {
-                    //Ya solo se crea la variable
-                    manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
-                    return true;
-                } else if (tipoDeDatoDeclarado == TipoDeDato.NUMERICO && datoAsignacion.getDato() == TipoDeDato.NUMERICO) {//Es numerico
-                    int n = datoNum.ordinal();
-                    int n1 = datoAsignacion.getDatoNumerico().ordinal();
-                    if (datoNum.ordinal() >= datoAsignacion.getDatoNumerico().ordinal()) {//POs esta bien
-                        //Ya solo se crea la variable
-                        manTabalDeSimbolos.crearElemento(linea, columna, declaracion.getNombreDeVariable(), tipoDeDatoDeclarado, datoNum, 1);
-                        return true;
-                    } else {
-                        //Error semantico, no se puede transformar
-                        String mensaje = "No se puede transformar " + datoNum + " en " + tipoDeDatoDeclarado;
-                        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
-                    }
                 } else {
-                    //Error semantico,no se puede transformar
-                    String mensaje = "No se puede transformar " + datoAsignacion + " en " + tipoDeDatoDeclarado;
+                    //Error semantico, no se puede transformar
+                    String mensaje = "No se puede transformar " + datoNum.name() + " en " + tipoDeDatoDeclarado;
                     ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
                 }
+            } else {
+                //Error semantico,no se puede transformar
+                String mensaje = "No se puede transformar " + datoAsignacion.getDato().name() + " en " + tipoDeDatoDeclarado;
+                ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
             }
-        } else {
-            //Error la variable ya ahasido declarada
-            String mensaje = "La variable " + declaracion.getNombreDeVariable() + " ya ha sido declarada";
-            ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
-
         }
         return false;
+    }
+
+    public void declararArreglo(ArrayList<String> nombresDeArreglos, int linea, int columna, TipoDeDato tipoDeDato, DatoNumerico datoNumerico, int dimension) {
+        if (!manCuarteto.existioError()) {
+            for (String nombreDeArreglo : nombresDeArreglos) {
+                if (manTabalDeSimbolos.buscarElemento(nombreDeArreglo) != null) {//Ya existe la variable
+                    String mensaje = "El arreglo ya ha sido declarado";
+                    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, manCuarteto);
+                    break;
+                } else {//Se crea la variable
+                    manTabalDeSimbolos.crearElemento(linea, columna, nombreDeArreglo, tipoDeDato, datoNumerico, dimension, true);
+                }
+            }
+        }
+
     }
 
 }

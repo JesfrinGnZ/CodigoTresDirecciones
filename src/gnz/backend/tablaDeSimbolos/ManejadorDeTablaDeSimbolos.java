@@ -34,7 +34,7 @@ public class ManejadorDeTablaDeSimbolos {
     public Dato[] transformarDato(String tipoDeDato) {
         System.out.println("VAMOS A TRANSFORMAR EL DATO");
         Dato[] datos = new Dato[2];
-        if (tipoDeDato.equalsIgnoreCase(TipoDeDato.CADENA.name())) {
+        if (tipoDeDato.equalsIgnoreCase("string")) {
             datos[0] = TipoDeDato.CADENA;
             datos[1] = null;
         } else if (tipoDeDato.equalsIgnoreCase(TipoDeDato.BOOLEANO.name())) {
@@ -62,13 +62,13 @@ public class ManejadorDeTablaDeSimbolos {
         return datos;
     }
 
-    public void crearElemento(int linea, int columna, String nombre, TipoDeDato tipoDeDato, DatoNumerico datoNum, int dimension) {
+    public void crearElemento(int linea, int columna, String nombre, TipoDeDato tipoDeDato, DatoNumerico datoNum, int dimension,boolean esArreglo) {
         ElementoDeTablaDeSimbolos elemento;
         if (buscarElemento(nombre) == null) {
             if (datoNum == null) {
-                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, 0,0, '0');
+                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, 0,0, '0',esArreglo);
             } else {
-                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, datoNum.getLimiteInferior(), datoNum.getLimiteSuperior(), '0');
+                elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, datoNum.getLimiteInferior(), datoNum.getLimiteSuperior(), '0',esArreglo);
             }
             this.tabla.add(elemento);
             posicion++;

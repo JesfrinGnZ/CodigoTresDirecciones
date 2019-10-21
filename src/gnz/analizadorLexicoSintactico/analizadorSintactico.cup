@@ -3,7 +3,7 @@
 
 package gnz.backend.analizadores;
 
-import gnz.backend.cuarteto.ManejadorDeCuartetos;
+import gnz.backend.cuarteto.*;
 import gnz.frontend.editorDeTexto.EditorDeTextoFrame;
 import java_cup.runtime.*;
 import gnz.backend.errores.ManejadorDeErrores;
@@ -119,7 +119,8 @@ non terminal Object     asignacionDeVariable;
 //******************************************************************Declaracion de arreglos******************************************
 
 non terminal Object     declaracionDeArreglos;
-non terminal Object     conjuntoDeIdentificadoresParaArreglo,unIdentificadorParaArreglo;
+non terminal String     unIdentificadorParaArreglo;
+non terminal ArrayList<String>     conjuntoDeIdentificadoresParaArreglo;
 
 //******************************************************************Declaracion de estructura If******************************************
 
@@ -191,15 +192,44 @@ expresion::=expresion:i DIV expresion:e {:RESULT=accionesParaExpresiones(i,e,Ope
 expresion::=expresion:i PORCENTAJE expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
 
+expresion::=IDENTIFICADOR:i CORCHETE_ABIERTO NUMERO_ENTERO:num CORCHETE_CERRADO
+{:
+    ElementoDeTablaDeSimbolos elemento =tablaDeSimbolos.buscarElemento(i);
+    if(elemento!=null){//La variable existe 
+        if( elemento.isEsArreglo()){
+            if(Integer.valueOf(num)< elemento.getDimension() && Integer.valueOf(num)>=0){
+            //Se genera la temporal para el arreglo 
+                Cuarteto c= new Cuarteto(null, i, num,"t"+manCuarteto.generarTemporal(), TipoDeCuarteto.ASIGARREGLO);
+                manCuarteto.getListaDeCuartetos().add(c);
+                DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),c.getResultado());
+                RESULT =dato;
+            }else{
+               ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+"fuera de dimension", ileft, ileft,manCuarteto);
+             }
+        }else{
+           ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no es un arreglo", ileft, ileft,manCuarteto);
+        }
+    }else{
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
+        RESULT=null;       
+    }
+:};
+
 expresion::=IDENTIFICADOR:i//Exactamente lo mismo, solo que se debe consultar su valor
     {:
     manCuarteto.setInicioDeExpresion();
     ElementoDeTablaDeSimbolos elemento=tablaDeSimbolos.buscarElemento(i);
     if(elemento==null){
-    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
-    RESULT=null;}//Error semantico, la variable no ha sido declarada
-    else{DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),i);
-    RESULT=dato;
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
+        RESULT=null;
+    }else{//Error semantico, la variable no ha sido declarada
+    if(!elemento.isEsArreglo()){
+            DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),i);
+         RESULT=dato;
+         }else{
+             ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" es un arreglo", ileft, ileft,manCuarteto);
+             RESULT =null;
+         }
     }   
     :};
 
@@ -245,30 +275,38 @@ expresion::=PARENTESIS_ABIERTO expresion:i PARENTESIS_CERRADO
 
 condicion::= condicion:t1 AND 
                 {:if(t1 !=null){//Es la primera condicion
-                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2());
+                     if(t1.getTipoDeBoolean()!=null){
+                       manCuarteto.crearCuartetoPrimeroParaComparacion(null,null,null,t1.getTipoDeBoolean());
+                    }else{
+                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2(),false);
+                    }
                 }   
                 :}
                 condicion:t2 //Es la segunda parte de un AND
                 {:
-                manCuarteto.crearSegundoCuartetoParaAnd(t2.getOperacion(), t2.getDato1(), t2.getDato2());
+                if(t2.getTipoDeBoolean()!=null){
+                    manCuarteto.crearSegundoCuartetoParaAnd(null,null,null,t2.getTipoDeBoolean());
+                }else{
+                   manCuarteto.crearSegundoCuartetoParaAnd(t2.getOperacion(), t2.getDato1(), t2.getDato2(),false);
+                }
                 RESULT =null;:};
 
 
 condicion::= condicion:t1 OR 
                 {:if(t1 !=null){//Es la primera condicion
-                    if(t1.getTipoDeBoolean()|!t1.getTipoDeBoolean()){
-                    System.out.println("NULLLLLLLLLLLLLLLLL");
+                    if(t1.getTipoDeBoolean()!=null){
+                       manCuarteto.crearCuartetoPrimeroParaComparacion(null,null,null,t1.getTipoDeBoolean());
                     }else{
-                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2());
+                    manCuarteto.crearCuartetoPrimeroParaComparacion(t1.getOperacion(), t1.getDato1(), t1.getDato2(),false);
                     }
                 }   
                 :}
                 condicion:t2 //Es la segunda parte de un OR
                 {:
-                if(t2.getTipoDeBoolean()|!t2.getTipoDeBoolean()){
-                    System.out.println("NULLLLLLLLLLLLLLLLL");
+                if(t2.getTipoDeBoolean()!=null){
+                    manCuarteto.crearSegundoCuartetoParaOr(null,null,null,t2.getTipoDeBoolean());
                 }else{
-                   manCuarteto.crearSegundoCuartetoParaOr(t2.getOperacion(), t2.getDato1(), t2.getDato2());
+                   manCuarteto.crearSegundoCuartetoParaOr(t2.getOperacion(), t2.getDato1(), t2.getDato2(),false);
                 }
                 RESULT =null;:};
 
@@ -276,33 +314,33 @@ condicion::= NOT condicion:t1;
 
 condicion::=TRUE:i 
 {:
-	DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, true, null);
+	DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, true, null,false,null,null);
         RESULT= dosEtiquetas;
 :};
 
 condicion::=FALSE:e
 {:
-        DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, false, null);
+        DosEtiquetas dosEtiquetas = new DosEtiquetas(null, null, false, null,false,null,null);
         RESULT= dosEtiquetas;
 :};
 
 condicion::=expresion:ex1 MENOR expresion:ex2//Aca se daca el temporal de cada expresion
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENOR);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENOR,true,editor,manCuarteto);:};//Verificar que sea de tipo numerico
 
 condicion::=expresion:ex1 MAYOR expresion:ex2
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYOR);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYOR,true,editor,manCuarteto);:};
 
 condicion::=expresion:ex1 MENOR_IGUAL expresion:ex2
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENORIGUAL);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MENORIGUAL,true,editor,manCuarteto);:};
 
 condicion::=expresion:ex1 MAYOR_IGUAL expresion:ex2
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYORIGUAL);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.MAYORIGUAL,true,editor,manCuarteto);:};
 
 condicion::=expresion:ex1 DISTINTO_DE expresion:ex2
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.DISTINTODE);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.DISTINTODE,true,editor,manCuarteto);:};
 
 condicion::=expresion:ex1 IGUAL_A expresion:ex2
-{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.IGUALA);:};
+{: RESULT=new DosEtiquetas(ex1,ex2,null,Operacion.IGUALA,true,editor,manCuarteto);:};
 
 //************************************************************************INSTRUCCIONES*****************************************************
 //******************************************************************Declaracion de variables******************************************
@@ -335,23 +373,25 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe realizar la respectiva comprobacion de tipo,crear la variable, y guardarla en la tabla
 {:
-                    DeclaracionDeVariable declaracion;
-                if(e.getTemporal()==null){//Solo viene un id|num, solo uno
-                    declaracion = new DeclaracionDeVariable(i, null, e);
+                 DeclaracionDeVariable declaracion;
+                if(e!=null){
+                 if(e.getTemporal()==null){//Solo viene un id|num, solo uno
+                declaracion = new DeclaracionDeVariable(i, null, e);
                 }else{
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(i,"t"+n,e);
                 }
-manejadorDeclaracion.crearVariableComoCuarteto(declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
+                    manejadorDeclaracion.crearVariableComoCuarteto(declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
                     RESULT=declaracion;
+                 }
 :};
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION condicion:dosEtiquetas
 {:
                 TipoDeDato d= (TipoDeDato)dato[0];
                 if(d==TipoDeDato.BOOLEANO){
-                    if(dosEtiquetas!=null){
-                        manCuarteto.crearCuartetoPrimeroParaComparacion(dosEtiquetas.getOperacion(), dosEtiquetas.getDato1(),dosEtiquetas.getDato2());
+                    if(dosEtiquetas!=null && dosEtiquetas.getDato1()!=null && dosEtiquetas.getDato2()!=null){
+                        manCuarteto.crearCuartetoPrimeroParaComparacion(dosEtiquetas.getOperacion(), dosEtiquetas.getDato1(),dosEtiquetas.getDato2(),dosEtiquetas.getTipoDeBoolean());
                         }
                         manejadorDeclaracion.asignarValorABooleano(i, ileft, iright);
                 }else{
@@ -365,20 +405,57 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION condicion:dosEtiquetas
 
 unaInstruccion::=asignacionDeVariable;
 
-asignacionDeVariable::=IDENTIFICADOR ASIGNACION expresion PCOMA;
+asignacionDeVariable::=IDENTIFICADOR:nombreVariable ASIGNACION expresion:datoCodigo PCOMA
+{:
+System.out,println("TAS LOCO MI CHAVO");               
+ ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(nombreVariable);
+    if(elemento==null){
+        String mensaje="La variable "+nombreVariable+ " no ha sido declarada";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, nombreVariableleft, nombreVariableright, manCuarteto);
+    }else{
+        DeclaracionDeVariable declaracion;
+         if(datoCodigo!=null){
+                 if(datoCodigo.getTemporal()==null){//Solo viene un id|num, solo uno
+                declaracion = new DeclaracionDeVariable(nombreVariable, null, datoCodigo);
+                }else{
+                    int n=manCuarteto.getNumeroDeTemporal()-1;
+                    declaracion = new DeclaracionDeVariable(nombreVariable,"t"+n,datoCodigo);
+                }
+                    manejadorDeclaracion.crearVariableComoCuarteto(declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
+                    RESULT=declaracion;
+                 }
+    }
+:};
 
-asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion PCOMA;
+asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion PCOMA
+{::};
 
 
 //******************************************************************Declaracion de arreglos******************************************
 
 unaInstruccion::=declaracionDeArreglos;
 
-declaracionDeArreglos::= ARRAY tipoDeVariable CORCHETE_ABIERTO NUMERO_ENTERO CORCHETE_CERRADO conjuntoDeIdentificadoresParaArreglo PCOMA;
+declaracionDeArreglos::= ARRAY tipoDeVariable:i CORCHETE_ABIERTO NUMERO_ENTERO:num CORCHETE_CERRADO conjuntoDeIdentificadoresParaArreglo:lista PCOMA
+{:
+                manejadorDeclaracion.declararArreglo(lista, ileft, iright, (TipoDeDato)dato[0], (DatoNumerico)dato[1], Integer.valueOf(num));
 
-conjuntoDeIdentificadoresParaArreglo::=conjuntoDeIdentificadoresParaArreglo COMA unIdentificadorParaArreglo|unIdentificadorParaArreglo;
+:};
 
-unIdentificadorParaArreglo::=IDENTIFICADOR;
+conjuntoDeIdentificadoresParaArreglo::=conjuntoDeIdentificadoresParaArreglo:lista COMA unIdentificadorParaArreglo:nombre 
+{:
+    lista.add(nombre);
+    RESULT= lista;
+:}
+     |
+
+unIdentificadorParaArreglo:nombre
+{:
+    ArrayList<String> identificadores= new ArrayList<>();
+                identificadores.add(nombre);
+                RESULT=identificadores;
+:};
+
+unIdentificadorParaArreglo::=IDENTIFICADOR:i {:RESULT=i;:};
 
 //******************************************************************Asignacion de arreglos******************************************
 
