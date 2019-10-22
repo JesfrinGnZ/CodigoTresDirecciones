@@ -81,8 +81,8 @@ Digitos = 0 | [1-9][0-9]*
 
 
     "string"    {return symbol(STRING,yytext());}
-//    "\""~"\"" {return symbol(DECLARACION_STRING,yytext());}    
-"\""!([^]* "\n" [^]*) "\"" {return symbol(DECLARACION_STRING,yytext());}
+    "\""~"\"" {return symbol(DECLARACION_STRING,yytext());}    
+//"\""!([^]* "\n" [^]*) "\"" {return symbol(DECLARACION_STRING,yytext());}
 //[^\n]
 
    //************************Operadores numericos**************************************

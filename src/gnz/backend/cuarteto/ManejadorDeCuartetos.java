@@ -42,33 +42,33 @@ public class ManejadorDeCuartetos {
 
     }
 
-    public void crearCuartetoPrimeroParaComparacion(Operacion op, DatoCodigo t1, DatoCodigo t2, boolean valor) {
+    public void crearCuartetoPrimeroParaComparacion(Operacion op, DatoCodigo t1, DatoCodigo t2, Boolean valor) {
         Cuarteto c;
         Cuarteto nuevoGoto;
-        if (t1 != null && t2 != null) {
-            if (op == null) {//Viene un true o false
-                if (valor) {
-                    c = crearCuartetoIf(null, t1, t2, "L" + generarEtiqueta(), valor);//>>>>>>>>>>>>>>>>>>1
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
-                } else {
-                    int e1 = generarEtiqueta();
-                    int e2 = generarEtiqueta();
-                    c = crearCuartetoIf(op, t1, t2, "L" + e2, valor);//>>>>>>>>>>>>>>>>>>1
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + e1, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
-                }
-            } else {
-                c = crearCuartetoIf(op, t1, t2, "L" + generarEtiqueta(), false);//>>>>>>>>>>>>>>>>>>1
+        // if (t1 != null && t2 != null) {
+        if (op == null) {//Viene un true o false
+            if (valor) {
+                c = crearCuartetoIf(null, t1, t2, "L" + generarEtiqueta(), valor);//>>>>>>>>>>>>>>>>>>1
                 nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
+            } else {
+                int e1 = generarEtiqueta();
+                int e2 = generarEtiqueta();
+                c = crearCuartetoIf(op, t1, t2, "L" + e2, valor);//>>>>>>>>>>>>>>>>>>1
+                nuevoGoto = new Cuarteto(null, "goto", null, "L" + e1, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
             }
-            this.ultimoGoto = nuevoGoto;
-            this.ultimoGotoParaIf = c;
-            this.listaDeCuartetos.add(c);
-            this.listaDeCuartetos.add(nuevoGoto);
+        } else {
+            c = crearCuartetoIf(op, t1, t2, "L" + generarEtiqueta(), false);//>>>>>>>>>>>>>>>>>>1
+            nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
         }
+        this.ultimoGoto = nuevoGoto;
+        this.ultimoGotoParaIf = c;
+        this.listaDeCuartetos.add(c);
+        this.listaDeCuartetos.add(nuevoGoto);
+        //}
 
     }
 
-    public int[] generarGotoAnd() {
+    public int[] generarGoto() {
         String numero = this.ultimoGoto.getResultado().substring(1, this.ultimoGoto.getResultado().length());
         String numero2 = this.ultimoGotoParaIf.getResultado().substring(1, this.ultimoGotoParaIf.getResultado().length());
         int arr[] = {Integer.valueOf(numero), Integer.valueOf(numero2)};
@@ -79,33 +79,33 @@ public class ManejadorDeCuartetos {
         Cuarteto cuartetoLabel;
         Cuarteto c;
         Cuarteto nuevoGoto;
-        if (t1 != null && t2 != null) {
-            int numeroDeLabelAlInicio = generarGotoAnd()[1];
-            int numeroDeLableFInal = generarGotoAnd()[0];
-            if (op == null) {
-                if (valor) {
-                    cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-                    c = crearCuartetoIf(null, t1, t2, "L" + generarEtiqueta(), valor);//>>>>>>>>>>>>>>>>>>1
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + numeroDeLableFInal, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
+        // if (t1 != null && t2 != null) {
+        int numeroDeLabelAlInicio = generarGoto()[1];
+        int numeroDeLableFInal = generarGoto()[0];
+        if (op == null) {
+            if (valor) {
+                cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                c = crearCuartetoIf(null, t1, t2, "L" + generarEtiqueta(), valor);//>>>>>>>>>>>>>>>>>>1
+                nuevoGoto = new Cuarteto(null, "goto", null, "L" + numeroDeLableFInal, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>2
 
-                } else {
-                    cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-                    c = crearCuartetoIf(op, t1, t2, "L" + numeroDeLableFInal, false);//>>>>>>>>>>>>>>>>>>>2 
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
-                }
-                this.inicioDeExpresion = this.listaDeCuartetos.size();
             } else {
                 cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-                c = crearCuartetoIf(op, t1, t2, "L" + generarEtiqueta(), false);//>>>>>>>>>>>>>>>>>>>2 
-                nuevoGoto = new Cuarteto(null, "goto", null, "L" + numeroDeLableFInal, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
+                c = crearCuartetoIf(op, t1, t2, "L" + numeroDeLableFInal, false);//>>>>>>>>>>>>>>>>>>>2 
+                nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
             }
-
-            this.ultimoGoto = nuevoGoto;
-            this.ultimoGotoParaIf = c;
-            this.listaDeCuartetos.add(this.inicioDeExpresion, cuartetoLabel);
-            this.listaDeCuartetos.add(c);
-            this.listaDeCuartetos.add(nuevoGoto);
+            this.inicioDeExpresion = this.listaDeCuartetos.size();
+        } else {
+            cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+            c = crearCuartetoIf(op, t1, t2, "L" + generarEtiqueta(), false);//>>>>>>>>>>>>>>>>>>>2 
+            nuevoGoto = new Cuarteto(null, "goto", null, "L" + numeroDeLableFInal, TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
         }
+
+        this.ultimoGoto = nuevoGoto;
+        this.ultimoGotoParaIf = c;
+        this.listaDeCuartetos.add(this.inicioDeExpresion, cuartetoLabel);
+        this.listaDeCuartetos.add(c);
+        this.listaDeCuartetos.add(nuevoGoto);
+        //}
 
     }
 
@@ -113,31 +113,31 @@ public class ManejadorDeCuartetos {
         Cuarteto cuartetoLabel;
         Cuarteto c;
         Cuarteto nuevoGoto;
-        if (t1 != null && t2 != null) {
-            int numeroDeLabelAlInicio = generarGotoAnd()[0];
-            int labelDeIf = generarGotoAnd()[1];
-            if (op == null) {
-                if (valor) {
-                    cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-                    c = crearCuartetoIf(op, t1, t2, "L" + labelDeIf, false);//>>>>>>>>>>>>>>>>>>>2 
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3 
-                } else {
-                    cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-                    c = crearCuartetoIf(op, t1, t2, "L" + labelDeIf, false);//>>>>>>>>>>>>>>>>>>>2 
-                    nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
-                }
-                this.inicioDeExpresion = this.listaDeCuartetos.size();
+        // if (t1 != null && t2 != null) {
+        int numeroDeLabelAlInicio = generarGoto()[0];
+        int labelDeIf = generarGoto()[1];
+        if (op == null) {
+            if (valor) {
+                cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                c = crearCuartetoIf(op, t1, t2, "L" + labelDeIf, false);//>>>>>>>>>>>>>>>>>>>2 
+                nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3 
             } else {
                 cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
                 c = crearCuartetoIf(op, t1, t2, "L" + labelDeIf, false);//>>>>>>>>>>>>>>>>>>>2 
                 nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
             }
-            this.ultimoGoto = nuevoGoto;
-            this.ultimoGotoParaIf = c;
-            this.listaDeCuartetos.add(this.inicioDeExpresion, cuartetoLabel);
-            this.listaDeCuartetos.add(c);
-            this.listaDeCuartetos.add(nuevoGoto);
+            this.inicioDeExpresion = this.listaDeCuartetos.size();
+        } else {
+            cuartetoLabel = new Cuarteto(null, null, null, "L" + numeroDeLabelAlInicio, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+            c = crearCuartetoIf(op, t1, t2, "L" + labelDeIf, false);//>>>>>>>>>>>>>>>>>>>2 
+            nuevoGoto = new Cuarteto(null, "goto", null, "L" + generarEtiqueta(), TipoDeCuarteto.GOTOETIQUETA);//>>>>>>>>>>>>>>>>>>>>>>3
         }
+        this.ultimoGoto = nuevoGoto;
+        this.ultimoGotoParaIf = c;
+        this.listaDeCuartetos.add(this.inicioDeExpresion, cuartetoLabel);
+        this.listaDeCuartetos.add(c);
+        this.listaDeCuartetos.add(nuevoGoto);
+        //}
 
     }
 
@@ -178,8 +178,10 @@ public class ManejadorDeCuartetos {
                 }
             } else if (cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.GOTOETIQUETA) {//Cuarteto ETIQUETA
                 txt.append("goto" + " " + cuarteto.getResultado() + "\n");
-            }else if (cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.ASIGARREGLO) {
-                txt.append(cuarteto.getResultado() + "=" + cuarteto.getOperador1() +"["+cuarteto.getOperador2()+"]"+"\n");
+            } else if (cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.VALORARREGLO) {
+                txt.append(cuarteto.getResultado() + "=" + cuarteto.getOperador1() + "[" + cuarteto.getOperador2() + "]" + "\n");
+            } else if (cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.ASIGARREGLO) {
+                txt.append(cuarteto.getOperador1() + "[" + cuarteto.getOperador2() + "] =" + cuarteto.getResultado() + "\n");
             } else {//Solo es Etiqueta
                 txt.append("  " + cuarteto.getResultado() + ":" + "\n");
             }
@@ -237,5 +239,6 @@ public class ManejadorDeCuartetos {
     public void setInicioDeExpresion() {
         this.inicioDeExpresion = this.listaDeCuartetos.size() - 1;
     }
+
 
 }

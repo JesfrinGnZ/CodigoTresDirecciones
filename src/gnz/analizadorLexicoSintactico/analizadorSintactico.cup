@@ -121,7 +121,7 @@ non terminal Object     asignacionDeVariable;
 non terminal Object     declaracionDeArreglos;
 non terminal String     unIdentificadorParaArreglo;
 non terminal ArrayList<String>     conjuntoDeIdentificadoresParaArreglo;
-
+non terminal Object asignacionDeArreglo;
 //******************************************************************Declaracion de estructura If******************************************
 
 non terminal Object     declaracionDeEstructuraIf;
@@ -192,26 +192,31 @@ expresion::=expresion:i DIV expresion:e {:RESULT=accionesParaExpresiones(i,e,Ope
 expresion::=expresion:i PORCENTAJE expresion:e {:RESULT=accionesParaExpresiones(i,e,Operacion.RESTO);:};
 
 
-expresion::=IDENTIFICADOR:i CORCHETE_ABIERTO NUMERO_ENTERO:num CORCHETE_CERRADO
+expresion::=IDENTIFICADOR:i CORCHETE_ABIERTO expresion:num CORCHETE_CERRADO
 {:
-    ElementoDeTablaDeSimbolos elemento =tablaDeSimbolos.buscarElemento(i);
-    if(elemento!=null){//La variable existe 
+       ElementoDeTablaDeSimbolos elemento =tablaDeSimbolos.buscarElemento(i);
+    if(num.getDatoNumerico()!=null && num.getDatoNumerico().ordinal()<=DatoNumerico.LONG.ordinal()){
+            if(elemento!=null){//La variable existe 
         if( elemento.isEsArreglo()){
-            if(Integer.valueOf(num)< elemento.getDimension() && Integer.valueOf(num)>=0){
             //Se genera la temporal para el arreglo 
-                Cuarteto c= new Cuarteto(null, i, num,"t"+manCuarteto.generarTemporal(), TipoDeCuarteto.ASIGARREGLO);
+                String valorDeNum=num.getValor();
+                if(num.getTemporal()!=null){
+                    valorDeNum="t"+num.getTemporal();
+                }
+                Cuarteto c= new Cuarteto(null, i, valorDeNum,"t"+manCuarteto.generarTemporal(), TipoDeCuarteto.ASIGARREGLO);
                 manCuarteto.getListaDeCuartetos().add(c);
                 DatoCodigo dato = new DatoCodigo(ileft,iright,elemento.getTipoBase(),elemento.getTipoNumerico(),c.getResultado());
                 RESULT =dato;
-            }else{
-               ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+"fuera de dimension", ileft, ileft,manCuarteto);
-             }
         }else{
            ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no es un arreglo", ileft, ileft,manCuarteto);
         }
     }else{
         ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(),"Vaariable "+i+" no ha sido declarada", ileft, ileft,manCuarteto);
         RESULT=null;       
+    }
+    }else{
+        String mensaje="El tamano del arreglo debe ser de tipo entero";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, numleft, numright, manCuarteto);
     }
 :};
 
@@ -368,7 +373,7 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i
 {:
   int n=manCuarteto.getNumeroDeTemporal()-1;
   DeclaracionDeVariable declaracion = new DeclaracionDeVariable(i,"t"+n,null);
-  manejadorDeclaracion.verificarYCrearTipoDeVariable(ileft, iright, declaracion, (TipoDeDato)dato[0], (DatoNumerico)dato[1],null);
+  manejadorDeclaracion.verificarYCrearTipoDeVariable(false,ileft, iright, declaracion, (TipoDeDato)dato[0], (DatoNumerico)dato[1],null);
   RESULT=declaracion;:};
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe realizar la respectiva comprobacion de tipo,crear la variable, y guardarla en la tabla
@@ -381,19 +386,19 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe 
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(i,"t"+n,e);
                 }
-                    manejadorDeclaracion.crearVariableComoCuarteto(declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
+                    manejadorDeclaracion.crearVariableComoCuarteto(false,declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
                     RESULT=declaracion;
                  }
 :};
 
 unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION condicion:dosEtiquetas
 {:
-                TipoDeDato d= (TipoDeDato)dato[0];
+               TipoDeDato d= (TipoDeDato)dato[0];
                 if(d==TipoDeDato.BOOLEANO){
-                    if(dosEtiquetas!=null && dosEtiquetas.getDato1()!=null && dosEtiquetas.getDato2()!=null){
+                    if(dosEtiquetas!=null){
                         manCuarteto.crearCuartetoPrimeroParaComparacion(dosEtiquetas.getOperacion(), dosEtiquetas.getDato1(),dosEtiquetas.getDato2(),dosEtiquetas.getTipoDeBoolean());
-                        }
-                        manejadorDeclaracion.asignarValorABooleano(i, ileft, iright);
+                    }
+                    manejadorDeclaracion.asignarValorABooleano(true,i, ileft, iright);
                 }else{
                     String mensaje="No se puede transaformar a booleano";
                   ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft, iright, manCuarteto);
@@ -407,7 +412,6 @@ unaInstruccion::=asignacionDeVariable;
 
 asignacionDeVariable::=IDENTIFICADOR:nombreVariable ASIGNACION expresion:datoCodigo PCOMA
 {:
-System.out,println("TAS LOCO MI CHAVO");               
  ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(nombreVariable);
     if(elemento==null){
         String mensaje="La variable "+nombreVariable+ " no ha sido declarada";
@@ -421,23 +425,52 @@ System.out,println("TAS LOCO MI CHAVO");
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(nombreVariable,"t"+n,datoCodigo);
                 }
-                    manejadorDeclaracion.crearVariableComoCuarteto(declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
+                    manejadorDeclaracion.crearVariableComoCuarteto(true,declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
                     RESULT=declaracion;
                  }
     }
 :};
 
-asignacionDeVariable::=IDENTIFICADOR ASIGNACION condicion PCOMA
-{::};
+asignacionDeVariable::=IDENTIFICADOR:nombreVariable ASIGNACION condicion:dosEtiquetas PCOMA
+{:
+    
+    ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(nombreVariable);
+    if(elemento==null){
+        String mensaje="El arreglo "+nombreVariable+ " no ha sido declarado";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, nombreVariableleft, nombreVariableright, manCuarteto);
+    }else{
+ if(elemento.getTipoBase()==TipoDeDato.BOOLEANO){
+                    if(dosEtiquetas!=null){
+                        manCuarteto.crearCuartetoPrimeroParaComparacion(dosEtiquetas.getOperacion(), dosEtiquetas.getDato1(),dosEtiquetas.getDato2(),dosEtiquetas.getTipoDeBoolean());
+                    }
+               manejadorDeclaracion.asignarValorABooleano(false,nombreVariable, nombreVariableleft, nombreVariableright);
+
+                }else{
+                    String mensaje="No se puede transaformar a booleano";
+                  ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, nombreVariableleft, nombreVariableright, manCuarteto);
+                }
+    }
+:};
 
 
 //******************************************************************Declaracion de arreglos******************************************
 
 unaInstruccion::=declaracionDeArreglos;
 
-declaracionDeArreglos::= ARRAY tipoDeVariable:i CORCHETE_ABIERTO NUMERO_ENTERO:num CORCHETE_CERRADO conjuntoDeIdentificadoresParaArreglo:lista PCOMA
+declaracionDeArreglos::= ARRAY tipoDeVariable:i CORCHETE_ABIERTO expresion:num CORCHETE_CERRADO conjuntoDeIdentificadoresParaArreglo:lista PCOMA
 {:
-                manejadorDeclaracion.declararArreglo(lista, ileft, iright, (TipoDeDato)dato[0], (DatoNumerico)dato[1], Integer.valueOf(num));
+ String valorDeNum;
+if(num.getDatoNumerico()!=null && num.getDatoNumerico().ordinal()<=DatoNumerico.LONG.ordinal()){
+    if(num.getTemporal()==null){
+        valorDeNum=num.getValor();
+    }else{
+        valorDeNum="t"+num.getTemporal();
+    }
+    manejadorDeclaracion.declararArreglo(lista, ileft, iright, (TipoDeDato)dato[0], (DatoNumerico)dato[1], valorDeNum);
+}else{
+    String mensaje="EL valor numerico debe ser entero";
+    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, numleft, numright, manCuarteto);
+}
 
 :};
 
@@ -459,13 +492,58 @@ unIdentificadorParaArreglo::=IDENTIFICADOR:i {:RESULT=i;:};
 
 //******************************************************************Asignacion de arreglos******************************************
 
+unaInstruccion::=asignacionDeArreglo;
 
+asignacionDeArreglo::= IDENTIFICADOR:i CORCHETE_ABIERTO expresion:num CORCHETE_CERRADO ASIGNACION expresion:asignacion PCOMA
+{:
+              ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(i);
+                if(elemento==null){
+                    String mensaje="La variable "+i+" no ha sido declarada";
+                    ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft,iright, manCuarteto);
+                }else{
+                       if(num.getDatoNumerico()!=null && num.getDatoNumerico().ordinal()<=DatoNumerico.LONG.ordinal()){
+                        String valorDeNum;
+                        if(num.getTemporal()==null){
+                           valorDeNum=num.getValor();
+                        }else{
+                           valorDeNum="t"+num.getTemporal();
+                        }
+                        manejadorDeclaracion.asignarValorAArreglo(asignacion,elemento,i, valorDeNum, elemento.getTipoBase(), elemento.getTipoNumerico(), ileft, iright);
+                        
+                        }else{
+                              String mensaje="La posicion "+i+" debe ser de tipo numerico no decimal";
+                              ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft,iright, manCuarteto);
+                       }
+                }
+:};
+
+asignacionDeArreglo::= IDENTIFICADOR:i CORCHETE_ABIERTO expresion:num CORCHETE_CERRADO ASIGNACION condicion:cond PCOMA
+{:
+    ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(i);
+    if(elemento==null){//NO se ha declarado la variable o no es del tipo booleano
+        String mensaje="La variable "+i+" no ha sido declarada";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft,iright, manCuarteto);
+    }else if(elemento.getTipoBase()!=TipoDeDato.BOOLEANO){
+        String mensaje="La variable "+i+" es de tipo BOOLEANO";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, ileft,iright, manCuarteto);
+    }else{
+        String posicion=num.getValor();
+        if(num.getTemporal()!=null){
+            posicion=num.getTemporal();
+        }
+        if(cond!=null){
+                        manCuarteto.crearCuartetoPrimeroParaComparacion(cond.getOperacion(), cond.getDato1(),cond.getDato2(),cond.getTipoDeBoolean());
+                    }
+        manejadorDeclaracion.darValorABooleano(i+"["+posicion+"]", ileft, iright);
+    }
+    
+:};
 
 //******************************************************************Declaracion de estructura IF******************************************
 
 unaInstruccion::=declaracionDeEstructuraIf;
 
-declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion:c  PARENTESIS_CERRADO {::} CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
 
 declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO unaInstruccion;
 

@@ -29,10 +29,10 @@ public class ManejadorDeTipos {
         Double numero = Double.parseDouble(s);
         System.out.println(DatoNumerico.CHAR.getLimiteInferior());
         System.out.println(DatoNumerico.CHAR.getLimiteSuperior());
-        if (numero >= DatoNumerico.BYTE.getLimiteInferior() && numero <= DatoNumerico.BYTE.getLimiteSuperior()) {
-            return DatoNumerico.BYTE;
-        } else if (numero >= DatoNumerico.CHAR.getLimiteInferior() && numero <= DatoNumerico.CHAR.getLimiteSuperior()) {
+        if (numero >= DatoNumerico.CHAR.getLimiteInferior() && numero <= DatoNumerico.CHAR.getLimiteSuperior()) {
             return DatoNumerico.CHAR;
+        } else if (numero >= DatoNumerico.BYTE.getLimiteInferior() && numero <= DatoNumerico.BYTE.getLimiteSuperior()) {
+            return DatoNumerico.BYTE;
         } else if (numero >= DatoNumerico.INT.getLimiteInferior() && numero <= DatoNumerico.INT.getLimiteSuperior()) {
             return DatoNumerico.INT;
         } else {

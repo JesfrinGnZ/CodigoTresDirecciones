@@ -62,9 +62,8 @@ public class ManejadorDeTablaDeSimbolos {
         return datos;
     }
 
-    public void crearElemento(int linea, int columna, String nombre, TipoDeDato tipoDeDato, DatoNumerico datoNum, int dimension,boolean esArreglo) {
+    public void crearElemento(int linea, int columna, String nombre, TipoDeDato tipoDeDato, DatoNumerico datoNum, String dimension,boolean esArreglo) {
         ElementoDeTablaDeSimbolos elemento;
-        if (buscarElemento(nombre) == null) {
             if (datoNum == null) {
                 elemento = new ElementoDeTablaDeSimbolos(this.posicion, nombre, tipoDeDato, datoNum, dimension, 0,0, '0',esArreglo);
             } else {
@@ -72,12 +71,7 @@ public class ManejadorDeTablaDeSimbolos {
             }
             this.tabla.add(elemento);
             posicion++;
-        } else {
-            //Error semantico la variable ya ha sido declarada anteriormente
-            String mensaje = "La variable " + nombre + " ya ha sido declarada";
-            ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, linea, columna, this.manCuartetos);
-            manCuartetos.setExistioError(true);
-        }
+       
     }
 
     public ElementoDeTablaDeSimbolos buscarElemento(String nombre) {

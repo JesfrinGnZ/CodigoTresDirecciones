@@ -14,13 +14,13 @@ public class ElementoDeTablaDeSimbolos {
     private String nombre;
     private TipoDeDato tipoBase;
     private DatoNumerico tipoNumerico;
-    private int dimension;
+    private String dimension;
     private double minimo;
     private double maximo;
     private char ambito;
     private boolean esArreglo;
 
-    public ElementoDeTablaDeSimbolos(int posicion, String nombre, TipoDeDato tipoBase, DatoNumerico tipoNumerico, int dimension, double minimo, double maximo, char ambito,boolean esArreglo) {
+    public ElementoDeTablaDeSimbolos(int posicion, String nombre, TipoDeDato tipoBase, DatoNumerico tipoNumerico, String dimension, double minimo, double maximo, char ambito,boolean esArreglo) {
         this.posicion = posicion;
         this.nombre = nombre;
         this.tipoBase = tipoBase;
@@ -64,11 +64,11 @@ public class ElementoDeTablaDeSimbolos {
         this.tipoNumerico = tipoNumerico;
     }
 
-    public int getDimension() {
+    public String getDimension() {
         return dimension;
     }
 
-    public void setDimension(int dimension) {
+    public void setDimension(String dimension) {
         this.dimension = dimension;
     }
 
