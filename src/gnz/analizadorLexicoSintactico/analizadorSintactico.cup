@@ -124,7 +124,7 @@ non terminal ArrayList<String>     conjuntoDeIdentificadoresParaArreglo;
 non terminal Object asignacionDeArreglo;
 //******************************************************************Declaracion de estructura If******************************************
 
-non terminal Object     declaracionDeEstructuraIf;
+non terminal Cuarteto     declaracionDeEstructuraIf;
 
 //******************************************************************Declaracion de estructura IF-ELSE******************************************
 
@@ -559,10 +559,16 @@ if(com!=null){
 unaInstruccion
 
 {:
+        //Generar el GOTO
+        String res="L"+String.valueOf(manCuarteto.generarEtiqueta());
         String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto nuevaGoto = new Cuarteto(null, null, null,res, TipoDeCuarteto.GOTOETIQUETA);
         Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-        manCuarteto.getListaDeCuartetos().add(sigueCodigo);     
-
+        Cuarteto sigueCodigo2 = new Cuarteto(null, null, null,res, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(nuevaGoto);     
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo); 
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo2);
+        RESULT=nuevaGoto;
 :};
 
 declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion:com  PARENTESIS_CERRADO 
@@ -577,40 +583,93 @@ if(com!=null){
 
 :} CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
 {:
+     //Generar el GOTO
+        String res="L"+String.valueOf(manCuarteto.generarEtiqueta());
         String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto nuevaGoto = new Cuarteto(null, null, null,res, TipoDeCuarteto.GOTOETIQUETA);
         Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
-        manCuarteto.getListaDeCuartetos().add(sigueCodigo);     
+        Cuarteto sigueCodigo2 = new Cuarteto(null, null, null,res, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(nuevaGoto);     
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo); 
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo2);
+        RESULT=nuevaGoto;
 :};
 
 //******************************************************************Declaracion de estructura IF-ELSE******************************************
 
 unaInstruccion::=declaracionDeEstructuraIfElse;
 
-declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE  unaInstruccion ;//Falta una instruccion
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf:cuarteto ELSE{:manCuarteto.getListaDeCuartetos().remove(manCuarteto.getListaDeCuartetos().size()-1);:}  unaInstruccion 
+{:
+Cuarteto fin = new Cuarteto(null, null, null,cuarteto.getResultado(), TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+manCuarteto.getListaDeCuartetos().add(cuarteto); 
+manCuarteto.getListaDeCuartetos().add(fin); 
 
-declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;//Falta una instruccion
+:};//Falta una instruccion
+
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf:cuarteto ELSE{:manCuarteto.getListaDeCuartetos().remove(manCuarteto.getListaDeCuartetos().size()-1);:} CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
+{:
+Cuarteto fin = new Cuarteto(null, null, null,cuarteto.getResultado(), TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+manCuarteto.getListaDeCuartetos().add(cuarteto); 
+manCuarteto.getListaDeCuartetos().add(fin); 
+
+:};//Falta una instruccion
 
 
 //******************************************************************Declaracion de estructura ELSEIF******************************************
 
 unaInstruccion::=declaracionDeEstructuraElseIf;
 
-declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf;
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf:cuarteto conjuntoDeElseIf{:ManejadorIf.arreglarIf(manCuarteto,cuarteto);:};
 
-declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE unaInstruccion;
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf:cuarteto conjuntoDeElseIf ELSE unaInstruccion{:ManejadorIf.arreglarIf(manCuarteto,cuarteto);:};
 
-declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf:cuarteto conjuntoDeElseIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO{:ManejadorIf.arreglarIf(manCuarteto,cuarteto);:};
 
 conjuntoDeElseIf::=conjuntoDeElseIf unElseIf | unElseIf;
 
 unElseIf::=ELSIF PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
-{::} 
+{:
+if(com!=null){
+
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto instruccionesAceptadas = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(instruccionesAceptadas);
+   
+:} 
 CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
-{::};
+{:
+Cuarteto nuevaGoto = new Cuarteto(null, null, null,"CAMBIAR", TipoDeCuarteto.GOTOETIQUETA);
+        manCuarteto.getListaDeCuartetos().add(nuevaGoto);   
+
+String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo); 
+:};
 
 unElseIf::=ELSIF PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
-{::} 
-unaInstruccion{::};
+{:
+if(com!=null){
+
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto instruccionesAceptadas = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+       Cuarteto nuevaGoto = new Cuarteto(null, null, null,"CAMBIAR", TipoDeCuarteto.GOTOETIQUETA);
+        manCuarteto.getListaDeCuartetos().add(instruccionesAceptadas);
+        manCuarteto.getListaDeCuartetos().add(nuevaGoto);   
+:} 
+unaInstruccion
+{:
+Cuarteto nuevaGoto = new Cuarteto(null, null, null,"CAMBIAR", TipoDeCuarteto.GOTOETIQUETA);
+        manCuarteto.getListaDeCuartetos().add(nuevaGoto);   
+
+String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo); 
+:};
 
 
 //******************************************************************Declaracion de estructura WHILE******************************************
@@ -756,8 +815,8 @@ declaracionDeFuncionesPredefinidas::=PRINTLN CORCHETE_ABIERTO conjuntoDeTexto CO
 
 conjuntoDeTexto::=conjuntoDeTexto COMA unTexto|unTexto;
 
-unTexto::=TRUE;
-unTexto::=DECLARACION_STRING;
+unTexto::=expresion;
+unTexto::=condicion;
 
 //******************************************************************ASIGNACION PARA FOR******************************************
 

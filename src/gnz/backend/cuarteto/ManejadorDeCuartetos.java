@@ -181,7 +181,9 @@ public class ManejadorDeCuartetos {
                 txt.append(cuarteto.getResultado() + "=" + cuarteto.getOperador1() + "[" + cuarteto.getOperador2() + "]" + "\n");
             } else if (cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.ASIGARREGLO) {
                 txt.append(cuarteto.getOperador1() + "[" + cuarteto.getOperador2() + "] =" + cuarteto.getResultado() + "\n");
-            } else {//Solo es Etiqueta
+            } else if(cuarteto.getTipoDeCuarteto() == TipoDeCuarteto.PRINTLN){
+                txt.append(cuarteto.getOperando()+" "+cuarteto.getResultado()+"\n");
+            }else {//Solo es Etiqueta
                 txt.append("  " + cuarteto.getResultado() + ":" + "\n");
             }
 
