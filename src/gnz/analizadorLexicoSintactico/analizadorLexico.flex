@@ -118,7 +118,7 @@ Digitos = 0 | [1-9][0-9]*
    //************************Estructura IF**************************************
 
     "IF"    {return symbol(IF,yytext());}
-    "ELSEIF" {return symbol(ELSIF,yytext());}
+    "ELSIF" {return symbol(ELSIF,yytext());}
     "ELSE"  {return symbol(ELSE,yytext());}
 
    //************************Estructura WHILE**************************************

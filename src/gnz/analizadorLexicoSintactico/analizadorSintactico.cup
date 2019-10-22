@@ -135,19 +135,20 @@ non terminal Object     declaracionDeEstructuraIfElse;
 non terminal Object     declaracionDeEstructuraElseIf,conjuntoDeElseIf,unElseIf;
 
 
-//******************************************************************Declaracion de estructura While******************************************
+//******************************************************************DeclaracionCHAR de estructura While******************************************
 
 non terminal Object     declaracionDeEstructuraWhile;
+non terminal Cuarteto instrucccionWhile;
 
 //******************************************************************declaracion de estructura DoWhile********************************************
 
 non terminal Object     declaracionDeEstructuraDoWhile;
-
+non terminal Cuarteto declaracionDo;
 
 //******************************************************************declaracion de estructura For********************************************
 
 non terminal Object     declaracionDeEstructuraFor,incrementoDecremento;
-
+non terminal Cuarteto     asignacionParaFor;
 
 //******************************************************************declaracion de funciones Predefinidas********************************************
 
@@ -386,7 +387,7 @@ unIdentificadorParaVariable::=IDENTIFICADOR:i ASIGNACION expresion:e//Aqui debe 
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(i,"t"+n,e);
                 }
-                    manejadorDeclaracion.crearVariableComoCuarteto(false,declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
+                    manejadorDeclaracion.crearVariableComoCuarteto(true,declaracion,ileft,iright, (TipoDeDato)dato[0],(DatoNumerico)dato[1]);
                     RESULT=declaracion;
                  }
 :};
@@ -425,7 +426,7 @@ asignacionDeVariable::=IDENTIFICADOR:nombreVariable ASIGNACION expresion:datoCod
                     int n=manCuarteto.getNumeroDeTemporal()-1;
                     declaracion = new DeclaracionDeVariable(nombreVariable,"t"+n,datoCodigo);
                 }
-                    manejadorDeclaracion.crearVariableComoCuarteto(true,declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
+                    manejadorDeclaracion.crearVariableComoCuarteto(false,declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
                     RESULT=declaracion;
                  }
     }
@@ -543,17 +544,51 @@ asignacionDeArreglo::= IDENTIFICADOR:i CORCHETE_ABIERTO expresion:num CORCHETE_C
 
 unaInstruccion::=declaracionDeEstructuraIf;
 
-declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion:c  PARENTESIS_CERRADO {::} CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+{:
+if(com!=null){
 
-declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO unaInstruccion;
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto instruccionesAceptadas = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(instruccionesAceptadas);     
+
+:} 
+
+unaInstruccion
+
+{:
+        String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo);     
+
+:};
+
+declaracionDeEstructuraIf::=IF PARENTESIS_ABIERTO condicion:com  PARENTESIS_CERRADO 
+{:
+if(com!=null){
+
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto instruccionesAceptadas = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(instruccionesAceptadas); 
+
+:} CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
+{:
+        String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+        Cuarteto sigueCodigo = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(sigueCodigo);     
+:};
 
 //******************************************************************Declaracion de estructura IF-ELSE******************************************
 
 unaInstruccion::=declaracionDeEstructuraIfElse;
 
-declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;//Falta una instruccion
-
 declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE  unaInstruccion ;//Falta una instruccion
+
+declaracionDeEstructuraIfElse::=declaracionDeEstructuraIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;//Falta una instruccion
 
 
 //******************************************************************Declaracion de estructura ELSEIF******************************************
@@ -562,50 +597,189 @@ unaInstruccion::=declaracionDeEstructuraElseIf;
 
 declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf;
 
-declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE unaInstruccion;
 
+declaracionDeEstructuraElseIf::=declaracionDeEstructuraIf conjuntoDeElseIf ELSE CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
 
 conjuntoDeElseIf::=conjuntoDeElseIf unElseIf | unElseIf;
 
-unElseIf::=ELSIF PARENTESIS_ABIERTO condicion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+unElseIf::=ELSIF PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+{::} 
+CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
+{::};
 
+unElseIf::=ELSIF PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+{::} 
+unaInstruccion{::};
 
 
 //******************************************************************Declaracion de estructura WHILE******************************************
 
 unaInstruccion::=declaracionDeEstructuraWhile;
+instrucccionWhile::=WHILE{:
+                    Cuarteto l0 = new Cuarteto(null, null, null, "L"+manCuarteto.generarEtiqueta(), TipoDeCuarteto.ETIQUETA);
+                    manCuarteto.getListaDeCuartetos().add(l0);
+                    RESULT=l0;
+:};
 
-declaracionDeEstructuraWhile::=WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraWhile::=instrucccionWhile:cuarteto PARENTESIS_ABIERTO condicion:com  PARENTESIS_CERRADO
+                                
+    {:
+//Crear y guardar el cuarteto de la etiqueta de que no
+if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(cuartetoLabel);                                  
 
-declaracionDeEstructuraWhile::=WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO unaInstruccion;
+                              :} 
+                              unaInstruccion{:
+                                Cuarteto nuevaGoto = new Cuarteto(null, null, null, cuarteto.getResultado(), TipoDeCuarteto.GOTOETIQUETA);
+                                manCuarteto.getListaDeCuartetos().add(nuevaGoto);
+                                String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+                               //Crear y guardar el cuarteto de la etiqueta de que no
+                               Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                               manCuarteto.getListaDeCuartetos().add(cuartetoLabel);
+                              :};
+
+
+declaracionDeEstructuraWhile::=instrucccionWhile:cuarteto PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+            {: if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(cuartetoLabel);  :} 
+
+              CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO {:
+                                Cuarteto nuevaGoto = new Cuarteto(null, null, null, cuarteto.getResultado(), TipoDeCuarteto.GOTOETIQUETA);
+                                manCuarteto.getListaDeCuartetos().add(nuevaGoto);
+                                String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+                               //Crear y guardar el cuarteto de la etiqueta de que no
+                               Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                               manCuarteto.getListaDeCuartetos().add(cuartetoLabel);
+               :};
+
+
 
 //******************************************************************Declaracion de estructura DO WHILE******************************************
 
 unaInstruccion::=declaracionDeEstructuraDoWhile;
 
-declaracionDeEstructuraDoWhile::=DO CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO WHILE PARENTESIS_ABIERTO comparacion PARENTESIS_CERRADO;
+declaracionDo::=DO{:
+        Cuarteto cuartetoLabel = new Cuarteto(null, null, null,"L"+manCuarteto.generarEtiqueta(), TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(cuartetoLabel); 
+        RESULT = cuartetoLabel;
+:};
+
+declaracionDeEstructuraDoWhile::=declaracionDo:labelInicio unaInstruccion  WHILE PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+{:
+//Comprobar si comparacion vienen nulo
+if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+int posicion=manCuarteto.getListaDeCuartetos().indexOf(manCuarteto.getUltimoGotoParaIf());
+                manCuarteto.getListaDeCuartetos().get(posicion).setResultado(labelInicio.getResultado());
+:};
+
+declaracionDeEstructuraDoWhile::=declaracionDo:labelInicio CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO WHILE PARENTESIS_ABIERTO condicion:com PARENTESIS_CERRADO
+{:
+//Comprobar si comparacion vienen nulo
+if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+int posicion=manCuarteto.getListaDeCuartetos().indexOf(manCuarteto.getUltimoGotoParaIf());
+                manCuarteto.getListaDeCuartetos().get(posicion).setResultado(labelInicio.getResultado());
+:};
+
 
 //******************************************************************Declaracion de estructura FOR******************************************
 
 unaInstruccion::=declaracionDeEstructuraFor;
 
-declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO unIdentificadorParaVariable DOS_PUNTOS comparacion DOS_PUNTOS incrementoDecremento PARENTESIS_CERRADO
-                                CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO;
+declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO  asignacionParaFor:cuarteto DOS_PUNTOS condicion:com  DOS_PUNTOS 
+ incrementoDecremento PARENTESIS_CERRADO 
+{:
+if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(cuartetoLabel);                                     //Generamos una nueva etiqueta
+:}
 
-declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO unIdentificadorParaVariable DOS_PUNTOS comparacion DOS_PUNTOS incrementoDecremento PARENTESIS_CERRADO unaInstruccion;
+ unaInstruccion 
+{:
+      
+                                Cuarteto nuevaGoto = new Cuarteto(null, null, null, cuarteto.getResultado(), TipoDeCuarteto.GOTOETIQUETA);
+                                manCuarteto.getListaDeCuartetos().add(nuevaGoto); 
+                                String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+                               //Crear y guardar el cuarteto de la etiqueta de que no
+                               Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                               manCuarteto.getListaDeCuartetos().add(cuartetoLabel);
 
-incrementoDecremento::= MAS NUMERO_ENTERO;
+:};
 
-incrementoDecremento::= MENOS NUMERO_ENTERO;
+
+
+declaracionDeEstructuraFor::=FOR PARENTESIS_ABIERTO asignacionParaFor:cuarteto DOS_PUNTOS condicion:com DOS_PUNTOS incrementoDecremento PARENTESIS_CERRADO
+{:
+if(com!=null){
+    manCuarteto.crearCuartetoPrimeroParaComparacion(com.getOperacion(), com.getDato1(),com.getDato2(),com.getTipoDeBoolean());
+}
+        String ultimoGotoParaIf="L"+manCuarteto.generarGoto()[1];
+        Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGotoParaIf, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+        manCuarteto.getListaDeCuartetos().add(cuartetoLabel); 
+:}
+                                CORCHETE_ABIERTO conjuntoDeInstrucciones CORCHETE_CERRADO
+{:
+                                Cuarteto nuevaGoto = new Cuarteto(null, null, null, cuarteto.getResultado(), TipoDeCuarteto.GOTOETIQUETA);
+                                manCuarteto.getListaDeCuartetos().add(nuevaGoto); 
+                                String ultimoGoto="L"+manCuarteto.generarGoto()[0];
+                               //Crear y guardar el cuarteto de la etiqueta de que no
+                               Cuarteto cuartetoLabel = new Cuarteto(null, null, null,ultimoGoto, TipoDeCuarteto.ETIQUETA);//>>>>>>>>>>>>>>>>1
+                               manCuarteto.getListaDeCuartetos().add(cuartetoLabel);
+:};
+
+incrementoDecremento::= MAS expresion;
+
+incrementoDecremento::= MENOS expresion;
 
 //******************************************************************Funciones predefinidas******************************************
 
 unaInstruccion::=declaracionDeFuncionesPredefinidas;//PRINT,PRINTLN
 
-declaracionDeFuncionesPredefinidas::=PRINT CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO;
+declaracionDeFuncionesPredefinidas::=PRINT CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO PCOMA;
 
-declaracionDeFuncionesPredefinidas::=PRINTLN CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO;
+declaracionDeFuncionesPredefinidas::=PRINTLN CORCHETE_ABIERTO conjuntoDeTexto CORCHETE_CERRADO PCOMA;
 
 conjuntoDeTexto::=conjuntoDeTexto COMA unTexto|unTexto;
 
-unTexto::=f;
+unTexto::=TRUE;
+unTexto::=DECLARACION_STRING;
+
+//******************************************************************ASIGNACION PARA FOR******************************************
+
+asignacionParaFor::=IDENTIFICADOR:nombreVariable ASIGNACION expresion:datoCodigo
+{:
+     ElementoDeTablaDeSimbolos elemento = tablaDeSimbolos.buscarElemento(nombreVariable);
+    if(elemento==null){
+        String mensaje="La variable "+nombreVariable+ " no ha sido declarada";
+        ManejadorDeErrores.mostrarErrorSemantico(editor.getErroresTextArea(), mensaje, nombreVariableleft, nombreVariableright, manCuarteto);
+    }else{
+        DeclaracionDeVariable declaracion;
+         if(datoCodigo!=null){
+                 if(datoCodigo.getTemporal()==null){//Solo viene un id|num, solo uno
+                declaracion = new DeclaracionDeVariable(nombreVariable, null, datoCodigo);
+                }else{
+                    int n=manCuarteto.getNumeroDeTemporal()-1;
+                    declaracion = new DeclaracionDeVariable(nombreVariable,"t"+n,datoCodigo);
+                }
+                    manejadorDeclaracion.crearVariableComoCuarteto(false,declaracion,nombreVariableleft,nombreVariableright, elemento.getTipoBase(),elemento.getTipoNumerico());
+                    Cuarteto l0 = new Cuarteto(null, null, null, "L"+manCuarteto.generarEtiqueta(), TipoDeCuarteto.ETIQUETA);
+                    manCuarteto.getListaDeCuartetos().add(l0);
+                    RESULT=l0;
+                 }
+    }
+:};

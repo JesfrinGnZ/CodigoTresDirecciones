@@ -5,26 +5,29 @@
  */
 package gnz.backend.manejoDeDatos;
 
+import gnz.backend.cuarteto.Cuarteto;
+import gnz.backend.cuarteto.ManejadorDeCuartetos;
+
 /**
  *
  * @author jesfrin
  */
 public class DatoCodigo {
-    
+
     private int numeroDeLinea;
     private int numeroDeColumna;
     private TipoDeDato dato;
     private DatoNumerico datoNumerico;
     private String valor;
     private String temporal;
-    
-    public DatoCodigo(int numeroDeLinea, int numeroDeColumna, TipoDeDato dato, DatoNumerico datoNumerico,String valor) {
+
+    public DatoCodigo(int numeroDeLinea, int numeroDeColumna, TipoDeDato dato, DatoNumerico datoNumerico, String valor) {
         this.numeroDeLinea = numeroDeLinea;
         this.numeroDeColumna = numeroDeColumna;
         this.dato = dato;
         this.datoNumerico = datoNumerico;
-        this.valor=valor;
-        this.temporal=null;
+        this.valor = valor;
+        this.temporal = null;
     }
 
     public DatoCodigo(int numeroDeLinea, int numeroDeColumna, TipoDeDato dato, DatoNumerico datoNumerico, String valor, String temporal) {
@@ -35,9 +38,9 @@ public class DatoCodigo {
         this.valor = valor;
         this.temporal = temporal;
     }
-    
-    
 
+   
+    
     public String getTemporal() {
         return temporal;
     }
@@ -46,8 +49,6 @@ public class DatoCodigo {
         this.temporal = temporal;
     }
 
-    
-    
     public int getNumeroDeLinea() {
         return numeroDeLinea;
     }
@@ -87,7 +88,6 @@ public class DatoCodigo {
     public void setValor(String valor) {
         this.valor = valor;
     }
-    
-    
+
     
 }

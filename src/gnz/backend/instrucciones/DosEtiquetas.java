@@ -22,8 +22,12 @@ public class DosEtiquetas {
     private DatoCodigo dato2;
     private Boolean tipoDeBoolean;
     private Operacion operacion;
-    private ManejadorDeErrores manErrores;
 
+ 
+
+   
+   
+    
     public DosEtiquetas(DatoCodigo dato1, DatoCodigo dato2, Boolean tipoDeBoolean, Operacion operacion, boolean seDebeVerificarQueSeaNumerico,EditorDeTextoFrame editor,ManejadorDeCuartetos manCuarteto) {
         if (seDebeVerificarQueSeaNumerico) {
             if (dato1.getDato() != TipoDeDato.NUMERICO || dato2.getDato() != TipoDeDato.NUMERICO) {
@@ -37,6 +41,8 @@ public class DosEtiquetas {
         this.operacion = operacion;
     }
 
+     
+    
     public DatoCodigo getDato1() {
         return dato1;
     }
@@ -77,4 +83,5 @@ public class DosEtiquetas {
         this.operacion = operacion;
     }
 
+    
 }

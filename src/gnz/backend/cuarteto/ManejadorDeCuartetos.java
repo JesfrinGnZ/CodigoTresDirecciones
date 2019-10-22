@@ -74,7 +74,6 @@ public class ManejadorDeCuartetos {
         int arr[] = {Integer.valueOf(numero), Integer.valueOf(numero2)};
         return arr;
     }
-
     public void crearSegundoCuartetoParaAnd(Operacion op, DatoCodigo t1, DatoCodigo t2, boolean valor) {
         Cuarteto cuartetoLabel;
         Cuarteto c;
@@ -238,6 +237,14 @@ public class ManejadorDeCuartetos {
 
     public void setInicioDeExpresion() {
         this.inicioDeExpresion = this.listaDeCuartetos.size() - 1;
+    }
+
+    public Cuarteto getUltimoGoto() {
+        return ultimoGoto;
+    }
+
+    public Cuarteto getUltimoGotoParaIf() {
+        return ultimoGotoParaIf;
     }
 
 

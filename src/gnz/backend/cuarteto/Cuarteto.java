@@ -60,4 +60,8 @@ public class Cuarteto {
     public void setTipoDeCuarteto(TipoDeCuarteto tipoDeCuarteto) {
         this.tipoDeCuarteto = tipoDeCuarteto;
     }
+
+    public void setResultado(String resultado) {
+        this.resultado = resultado;
+    }
 }
